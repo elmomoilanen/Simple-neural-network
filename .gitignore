@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+.venv
+poetry.lock
+*.log
+*.log.[1-9]
+
+*.h5
+*.npy
+*.ipynb
+.ipynb_checkpoints/

@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "disable_existing_loggers": true,
+    "formatters": {
+        "basic_console": {
+            "format": "%(asctime)s %(name)s - %(message)s"
+        },
+        "basic_file": {
+            "format": "%(asctime)s %(name)s - %(levelname)s - %(message)s"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "basic_console",
+            "stream": "ext://sys.stdout",
+            "level": "INFO"
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "basic_file",
+            "level": "INFO",
+            "filename": "simple_neural_network.log",
+            "maxBytes": 1048576,
+            "backupCount": 3
+        }
+    },
+    "loggers": {
+        "simple_neural_network": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": false
+        }
+    }
+}

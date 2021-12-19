@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "simple-neural-network"
+version = "1.0.0"
+description = "Introduces a small-scale simple neural network."
+authors = ["Elmo Moilanen"]
+license = "CC0-1.0"
+keywords = ["statistics", "neural network", "supervised learning", "genetic algorithms"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+numpy = "^1.21"
+matplotlib = "^3.5"
+h5py = "^3.6"
+
+[tool.poetry.dev-dependencies]
+black = "21.12b0"
+pytest = "^6.2"
+flake8 = "^4.0"
+pre-commit = "^2.16"
+
+[tool.black]
+line-length = 100
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+)/
+'''
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
