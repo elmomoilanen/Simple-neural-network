@@ -1,3 +1,5 @@
+import os
+import time
 from math import isclose
 
 import numpy as np
@@ -5,9 +7,18 @@ import pytest
 
 from simple_neural_network.neural_network import ANN
 
-
 # init random number generator
 rg = np.random.default_rng()
+
+FOLDER_PATH = os.path.split(__file__)[0]
+
+
+def remove_file(full_path):
+    if not os.path.isfile(full_path):
+        raise ValueError(f"Cannot find or not a file: {full_path}")
+    os.unlink(full_path)
+    # wait for moment before returning
+    time.sleep(0.5)
 
 
 def test_init_obj_not_accepted_hidden_nodes():
@@ -77,17 +88,17 @@ def test_init_obj_different_hidden_activations():
     for act in activations:
         ann = ANN((1, 1), "class", activation1=act, activation2=act)
 
-        assert ann._afn1.__name__ == f"_{act}"
-        assert ann._afn2.__name__ == f"_{act}"
-        assert ann._afn3.__name__ == "_softmax"
+        assert ann._afn1.__name__ == act
+        assert ann._afn2.__name__ == act
+        assert ann._afn3.__name__ == "softmax"
 
 
 def test_init_obj_output_activation():
     ann = ANN((5, 1), "class")
-    assert ann._afn3.__name__ == "_softmax"
+    assert ann._afn3.__name__ == "softmax"
 
     ann = ANN((5, 1), "regression")
-    assert ann._afn3.__name__ == "_identity"
+    assert ann._afn3.__name__ == "identity"
 
 
 def test_init_obj_decay_and_learning_rates():
@@ -124,8 +135,8 @@ def test_init_obj_object_with_all_attributes():
     assert ann.hidden_nodes[1] == 1
     assert ann.method == "reg"
 
-    assert ann._afn3.__name__ == "_identity"
-    assert ann._afn2.__name__ == "_elu"
+    assert ann._afn3.__name__ == "identity"
+    assert ann._afn2.__name__ == "elu"
 
     assert ann._decay_rate == 0.1
     assert ann._learning_rate == 1.0
@@ -209,26 +220,18 @@ def test_momentum_and_adapter_weights():
         assert ann._mom_b[f"b{i}"].shape == ann._s_b[f"b{i}"].shape
 
 
-def test_softmax_activation():
-    x = rg.normal(size=(10, 20))
-
-    x_soft = ANN._softmax(x)
-
-    # each column should sum up to 1
-    col_sums = np.sum(x_soft, axis=0)
-    assert all(isclose(csum, 1.0, abs_tol=0.001) for csum in col_sums)
-    # each value should be within [0, 1] (or even (0,1))
-    assert np.alltrue(x_soft >= 0)
-    assert np.alltrue(x_soft <= 1)
-
-
 def test_cross_entropy():
+    ann = ANN((5, 5), "class")
+
     x_type = np.array([1.0]).dtype
     y = np.array(["A", "B", "B", "C", "A"])
     y_ohe, y_inv = ANN._transform_y(y, x_type)
 
-    # y_pred must be 3 x 5
-    y_pred = ANN._softmax(rg.normal(size=(3, 5)))
+    y_inv_uniq = len(np.unique(y_inv))
+    assert y_inv_uniq == 3
+    # y_pred must be 3 x 5 (y_inv_uniq x len(y))
+    data = rg.normal(size=(y_inv_uniq, len(y)))
+    y_pred = ann._afn3(data)
     assert y_pred.shape == y_ohe.shape
 
     cross_entr = ANN._cross_entropy(y_inv, y_pred)
@@ -238,6 +241,7 @@ def test_cross_entropy():
     mtable = y_ohe * y_pred
     with np.errstate(divide="ignore"):
         m_log = np.where(mtable > 0, np.log(mtable), 0)
+
     cross_entr_other = -np.sum(m_log) / len(y)
 
     assert isclose(cross_entr, cross_entr_other, abs_tol=0.01)
@@ -296,27 +300,147 @@ def test_eval_cost_with_regularization():
     assert isclose(ANN._cross_entropy(y_inv, y_pred), cost_without_pen, abs_tol=0.01)
 
 
-def test_confusion_matrix_binary():
-    y_true = np.array(["A", "B", "B", "B"])
-    # y_pred is the inverse version
-    y_pred = np.array([0, 1, 0, 1])
+def test_fitting_basic_class_model():
+    ann = ANN((3, 3), "class", verbose_level="low")
 
-    corr_cmatrix = np.array([[1, 0], [1, 2]])
+    x = rg.normal(size=(5, 2)) + 0.5
+    y = np.array(["red", "blue", "green", "red", "green"])
 
-    cmatrix = ANN.confusion_matrix(y_true, y_pred)
+    w_save_path = os.path.join(FOLDER_PATH, "weights.h5")
+    epochs = 2
+    batch_size = 2
+    use_valid = False
+    iters = int(np.ceil(x.shape[0] / batch_size))
 
-    assert cmatrix.shape == (2, 2)
-    assert np.alltrue(corr_cmatrix == cmatrix)
+    ann.fit(
+        x,
+        y.reshape(-1, 1),
+        epochs=epochs,
+        batch_size=batch_size,
+        use_validation=use_valid,
+        weights_save_path=w_save_path,
+    )
+
+    assert ann._use_valid is use_valid
+    assert ann._batch_size == batch_size
+    assert ann._epochs == epochs
+    assert ann._iters == iters
+
+    assert os.path.exists(w_save_path)
+    remove_file(w_save_path)
+    # file should have been removed by now
+    assert not os.path.exists(w_save_path)
+
+    len(ann._train_stats["cost"]) == epochs
+    len(ann._train_stats["acc"]) == epochs
 
 
-def test_confusion_matrix_multi_category():
-    y_true = np.array(["C", "A", "C", "B", "A"])
-    # y_pred is the inverse version
-    y_pred = np.array([1, 0, 2, 1, 2])
+def test_fitting_custom_class_model():
+    ann = ANN(
+        (3, 3),
+        "class",
+        optimizer="adam",
+        learning_rate=0.5,
+        lambda_=2.5,
+        activation1="tanh",
+        activation2="elu",
+        verbose_level="low",
+    )
 
-    corr_cmatrix = np.array([[1, 0, 1], [0, 1, 0], [0, 1, 1]])
+    x = rg.normal(size=(4, 2)) + 0.5
+    y = np.array(["red", "blue", "red", "green"])
 
-    cmatrix = ANN.confusion_matrix(y_true, y_pred)
+    w_save_path = os.path.join(FOLDER_PATH, "weights.h5")
+    epochs = 2
+    batch_size = 1
+    use_valid = False
+    iters = int(np.ceil(x.shape[0] / batch_size))
 
-    assert cmatrix.shape == (3, 3)
-    assert np.alltrue(corr_cmatrix == cmatrix)
+    ann.fit(
+        x,
+        y.reshape(-1, 1),
+        epochs=epochs,
+        batch_size=batch_size,
+        use_validation=use_valid,
+        weights_save_path=w_save_path,
+    )
+
+    assert ann._use_valid is use_valid
+    assert ann._batch_size == batch_size
+    assert ann._epochs == epochs
+    assert ann._iters == iters
+
+    assert os.path.exists(w_save_path)
+    remove_file(w_save_path)
+    # file should have been removed by now
+    assert not os.path.exists(w_save_path)
+
+    len(ann._train_stats["cost"]) == epochs
+    len(ann._train_stats["acc"]) == epochs
+
+
+def test_fitting_reg_model():
+    ann = ANN((3, 3), "reg", verbose_level="low")
+
+    x = rg.normal(size=(5, 2)) + 0.5
+    y = np.array([-1.0, 0.5, -0.5, 1.0, 0.5])
+
+    w_save_path = os.path.join(FOLDER_PATH, "weights.h5")
+    epochs = 2
+    batch_size = 2
+    use_valid = True
+    val_size = int(ann._val_stats["size"] * x.shape[0])
+    iters = int(np.ceil((x.shape[0] - val_size) / batch_size))
+
+    ann.fit(
+        x,
+        y.reshape(-1, 1),
+        epochs=epochs,
+        batch_size=batch_size,
+        use_validation=use_valid,
+        weights_save_path=w_save_path,
+    )
+
+    # regression has only one out dimension
+    assert ann._w["w3"].shape[0] == 1
+
+    assert ann._use_valid is use_valid
+    assert ann._batch_size == batch_size
+    assert ann._epochs == epochs
+    assert ann._iters == iters
+
+    assert os.path.exists(w_save_path)
+    remove_file(w_save_path)
+    # file should have been removed by now
+    assert not os.path.exists(w_save_path)
+
+    len(ann._train_stats["cost"]) == epochs
+    len(ann._train_stats["acc"]) == epochs
+
+
+def test_predict_reg():
+    ann = ANN((3, 2), "reg")
+
+    x = rg.normal(size=(5, 2)) + 0.5
+    ann._reset_weights(x.shape[1], out_node_count=1)
+
+    y_pred = ann.predict(x)
+
+    # must have x.shape[0] predictions
+    assert y_pred.shape[0] == x.shape[0]
+    assert y_pred.shape[1] == 1
+
+
+def test_predict_class():
+    ann = ANN((3, 2), "class")
+
+    x = rg.normal(size=(5, 2)) + 0.5
+    y_categories = 3
+    ann._reset_weights(x.shape[1], out_node_count=y_categories)
+
+    y_pred = ann.predict(x)
+
+    # must have x.shape[0] predictions
+    assert y_pred.shape[0] == x.shape[0]
+    # prediction is in inverse format
+    assert np.alltrue((y_pred >= 0) & (y_pred < y_categories))

@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Introduces a small-scale simple neural network."
 authors = ["Elmo Moilanen"]
 license = "CC0-1.0"
-keywords = ["statistics", "neural network", "supervised learning", "genetic algorithms"]
+keywords = ["statistics", "neural network", "supervised learning", "evolutionary algorithms"]
 
 [tool.poetry.dependencies]
 python = "^3.9"

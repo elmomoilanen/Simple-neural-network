@@ -7,8 +7,6 @@ public methods:
     Predict output for test data X.
 - plot_fit_results
     Plot cost and accuracy measures from the fitting step.
-- confusion_matrix
-    Get the contingency table between actual and predicted values of y.
 
 """
 import os
@@ -21,6 +19,21 @@ from typing import Tuple, Optional
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
+
+from .activations import (
+    tanh,
+    dtanh,
+    relu,
+    drelu,
+    leaky_relu,
+    dleaky_relu,
+    elu,
+    delu,
+    softmax,
+    dsoftmax,
+    identity,
+    didentity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +63,7 @@ class ANN:
     learning_rate: non-negative float, default 0.1
         If `decay_rate` is zero and hence exp(-decay_rate * epoch) equals one,
         this constant rate will be used with 0.1 as default value. Otherwise,
-        positive decay rate in use, this rate will not have significance.
+        when positive decay rate is in use, this rate will not have any significance.
 
     lambda_: non-negative float, default 0.0
         Strength of L2 regularization, controls the squared l2-norm that
@@ -217,12 +230,12 @@ class ANN:
                 raise TypeError(f"Allowed activation functions: {allowed_activ}")
 
         func_pairs = {
-            "tanh": (self._tanh, self._dtanh),
-            "relu": (self._relu, self._drelu),
-            "leaky_relu": (self._leaky_relu, self._dleaky_relu),
-            "elu": (self._elu, self._delu),
-            "softmax": (self._softmax, self._dsoftmax),
-            "identity": (self._identity, self._didentity),
+            "tanh": (tanh, dtanh),
+            "relu": (relu, drelu),
+            "leaky_relu": (leaky_relu, dleaky_relu),
+            "elu": (elu, delu),
+            "softmax": (softmax, dsoftmax),
+            "identity": (identity, didentity),
         }
         return func_pairs[func_name]
 
@@ -283,55 +296,6 @@ class ANN:
         self._s_b["b2"] = np.zeros(self._mom_b["b2"].shape)
         self._s_b["b3"] = np.zeros(self._mom_b["b3"].shape)
 
-    @staticmethod
-    def _tanh(z):
-        exp = np.exp(2.0 * z)
-        return (exp - 1.0) / (exp + 1.0)
-
-    def _dtanh(self, z):
-        return 1.0 - np.power(self._tanh(z), 2.0)
-
-    @staticmethod
-    def _relu(z):
-        return np.maximum(z, 0.0)
-
-    @staticmethod
-    def _drelu(z):
-        return np.where(z > 0.0, 1.0, 0.0)
-
-    @staticmethod
-    def _leaky_relu(z):
-        return np.where(z < 0.0, 0.01 * z, z)
-
-    @staticmethod
-    def _dleaky_relu(z):
-        return np.where(z < 0.0, 0.01, 1.0)
-
-    @staticmethod
-    def _elu(z):
-        return np.where(z >= 0.0, z, np.exp(z) - 1.0)
-
-    @staticmethod
-    def _delu(z):
-        return np.where(z >= 0.0, 1.0, np.exp(z))
-
-    @staticmethod
-    def _softmax(z):
-        exp = np.exp(z - np.max(z, axis=0))
-        return exp / np.sum(exp, axis=0)
-
-    def _dsoftmax(self, z):
-        s = self._softmax(z)
-        return s * (1.0 - s)
-
-    @staticmethod
-    def _identity(z):
-        return z
-
-    @staticmethod
-    def _didentity(z):
-        return 1.0
-
     def _feedforward(self, X):
         self._z["z1"] = np.matmul(self._w["w1"], X.T) + self._b["b1"]
         self._h["h1"] = self._afn1(self._z["z1"])
@@ -371,12 +335,12 @@ class ANN:
 
     @staticmethod
     def _mse(y, y_pred):
-        square_of_err = (y - y_pred) ** 2
+        square_of_err = (y.T - y_pred) ** 2
         return np.mean(square_of_err) * 0.5
 
     @staticmethod
     def _dmse(y, y_pred):
-        return (y_pred - y) / y.shape[0]
+        return (y_pred - y.T) / y.shape[0]
 
     def _eval_cost(self, y, y_pred):
         if self._lambda > 0:
@@ -406,10 +370,13 @@ class ANN:
         if self.method == "class":
             return np.sum(np.argmax(y_pred, axis=0) == y) / y.shape[0]
 
-        ss_total = np.sum((y - np.mean(y)) ** 2)
-        ss_resid = np.sum((y - y_pred) ** 2)
+        ss_total = np.sum((y - y.mean()) ** 2)
+        ss_resid = np.sum((y.T - y_pred) ** 2)
 
-        return 1.0 - (ss_resid / ss_total)
+        if ss_total < 1e-6:
+            return 0.0
+
+        return max(1.0 - (ss_resid / ss_total), 0.0)
 
     def _compute_predict(self, X):
         h1_pred = self._afn1(np.matmul(self._w["w1"], X.T) + self._b["b1"])
@@ -686,7 +653,8 @@ class ANN:
             True if a separate validation data should be created, False otherwise. True by default.
 
         weights_save_path: str
-            Save path for best weights/biases in terms of minimizing the cost function, by default the cwd.
+            Save path for best weights/biases in terms of minimizing the cost function, by default the cwd
+            and with name `weights.h5`.
         """
         if len(X.shape) != 2:
             raise ValueError("Give array `X` as n x p, NumPy's .reshape(1, -1) might be helpful")
@@ -792,7 +760,7 @@ class ANN:
         """Predict output for test data X.
 
         For classification tasks, it might be necessary to reformat
-        the returned prediction before evaluating precision with test data y.
+        returned predictions before evaluating precision with test data y.
         This means that either both test y and pred y are in inverse format
         or in their original format (whatever it is, numbers, chars etc.).
 
@@ -830,7 +798,7 @@ class ANN:
         if self.method == "class":
             return np.argmax(y_pred, axis=0)
 
-        return y_pred
+        return y_pred.T
 
     def plot_fit_results(self, figsize: Tuple[int, int] = (10, 6)) -> None:
         """Plot fit results, cost and accuracy.
@@ -876,46 +844,3 @@ class ANN:
 
         plt.show()
         plt.close(fig)
-
-    @staticmethod
-    def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-        """Contingency table between true (rows) and predicted (columns) values of y.
-
-        Only for classification type tasks.
-
-        Pass arrays in their original value labels (numerical, categorical) or
-        in their inverse format. For classification tasks, the `predict` method
-        returns the array in inverse format.
-
-        Params
-        ------
-        y_true: NumPy array
-            True/actual y with numerical or categorical values of shape (n,).
-
-        y_pred: NumPy array
-            Predicted y with numerical or categorical values of shape (n,).
-
-        Returns
-        -------
-        NumPy array
-            Rows represent the true labels with zero-based indexing and columns
-            corresponding predicted labels. E.g. entry [0, 1] represents the case where the
-            true label is zero and predicted one. Thus, diagonal entries indicates the
-            correctly predicted counts.
-        """
-        if not (y_true.ndim == 1 and y_pred.ndim == 1):
-            raise ValueError("Both `y_true` and `y_pred` must be 1-dim arrays, i.e. `y.ndim == 1`")
-
-        if y_true.shape != y_pred.shape:
-            raise ValueError("`y_true` and `y_pred` must be of equal length")
-
-        y_uniq, y_true_inv = np.unique(y_true, return_inverse=True)
-        _, y_pred_inv = np.unique(y_pred, return_inverse=True)
-
-        dim = y_uniq.shape[0]
-        matrix = np.zeros((dim, dim), dtype=np.int64)
-
-        for j in range(y_true_inv.shape[0]):
-            matrix[y_true_inv[j], y_pred_inv[j]] += 1
-
-        return matrix
