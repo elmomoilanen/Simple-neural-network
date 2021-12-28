@@ -103,7 +103,7 @@ class ANN:
     --------
     Example for classification task with synthetic data. 20 % of the data will be used
     for validation and thus the batch size value 50 means that there will be 8
-    iterations for each epoch.
+    iterations for every epoch.
 
     >>> import numpy as np
     >>> from simple_neural_network.neural_network import ANN
@@ -127,7 +127,7 @@ class ANN:
 
         self._optimizer = str(kwargs.get("optimizer", "sgd"))
         if self._optimizer not in self.allowed_optimizers:
-            raise ValueError(f"`optimizer` must be one of {','.join(self.allowed_optimizers)}")
+            raise ValueError(f"`optimizer` must be one of {', '.join(self.allowed_optimizers)}")
 
         self._decay_rate = max(float(kwargs.get("decay_rate", 0)), 0.0)
         self._learning_rate = max(float(kwargs.get("learning_rate", 0.1)), 0.0)
@@ -182,8 +182,9 @@ class ANN:
         self._rng = np.random.default_rng(seed=seed)
 
     def __repr__(self):
-        node_repr = ",".join(self.hidden_nodes)
-        return f"{self.__class__.__name__}(hidden_nodes=({node_repr}))"
+        return (
+            f"{self.__class__.__name__}(hidden_nodes={self.hidden_nodes!r}, method={self.method!r})"
+        )
 
     @property
     def hidden_nodes(self):
@@ -216,7 +217,7 @@ class ANN:
             method_type = "reg"
 
         if method_type not in self.allowed_methods:
-            raise ValueError(f"`method` must be one of {','.join(self.allowed_methods)}")
+            raise ValueError(f"`method` must be one of {', '.join(self.allowed_methods)}")
 
         self._method = method_type
 
@@ -225,7 +226,7 @@ class ANN:
 
         if layer == "hidden":
             if func_name not in self.allowed_hidden_activations:
-                allowed_activ = ",".join(self.allowed_hidden_activations)
+                allowed_activ = ", ".join(self.allowed_hidden_activations)
 
                 raise TypeError(f"Allowed activation functions: {allowed_activ}")
 
@@ -308,9 +309,11 @@ class ANN:
 
     @staticmethod
     def _cross_entropy(y_inv, y_pred):
-        # y_inv[i] is the correct y inv value for column i
-        # use this to avoid redundant multiplications which y_ohe * y_pred would do
+        # y_inv[i] is the correct y inv value for column i (and only value equal to one)
+        # filter out probabilities (y_pred values) for which y is zero
         non_zero_y = y_pred[y_inv, np.arange(y_pred.shape[1])]
+
+        # add small term to avoid taking logarithm from zero
         log_y = np.log(non_zero_y + 1e-9)
 
         return -np.mean(log_y)
@@ -342,10 +345,10 @@ class ANN:
     def _dmse(y, y_pred):
         return (y_pred - y.T) / y.shape[0]
 
-    def _eval_cost(self, y, y_pred):
+    def _eval_cost(self, y_inv, y_pred):
         if self._lambda > 0:
             # apply L2 regularization
-            regu_prefix = self._lambda / (2.0 * y.shape[0])
+            regu_prefix = self._lambda / (2.0 * y_inv.shape[0])
 
             w1_sofs = np.sum(np.reshape(self._w["w1"] ** 2, -1))
             w2_sofs = np.sum(np.reshape(self._w["w2"] ** 2, -1))
@@ -356,22 +359,23 @@ class ANN:
             regu_penalty = 0
 
         if self.method == "class":
-            return self._cross_entropy(y, y_pred) + regu_penalty
+            return self._cross_entropy(y_inv, y_pred) + regu_penalty
 
-        return self._mse(y, y_pred) + regu_penalty
+        # for mse, y and y_inv are the same
+        return self._mse(y_inv, y_pred) + regu_penalty
 
-    def _eval_dcost(self, y, y_pred):
+    def _eval_dcost(self, y_inv, y_pred):
         if self.method == "class":
-            return self._dcross_entropy(y, y_pred)
+            return self._dcross_entropy(y_inv, y_pred)
 
-        return self._dmse(y, y_pred)
+        return self._dmse(y_inv, y_pred)
 
-    def _eval_acc(self, y, y_pred):
+    def _eval_acc(self, y_inv, y_pred):
         if self.method == "class":
-            return np.sum(np.argmax(y_pred, axis=0) == y) / y.shape[0]
+            return np.sum(np.argmax(y_pred, axis=0) == y_inv) / y_inv.shape[0]
 
-        ss_total = np.sum((y - y.mean()) ** 2)
-        ss_resid = np.sum((y.T - y_pred) ** 2)
+        ss_total = np.sum((y_inv - y_inv.mean()) ** 2)
+        ss_resid = np.sum((y_inv.T - y_pred) ** 2)
 
         if ss_total < 1e-6:
             return 0.0
@@ -407,7 +411,7 @@ class ANN:
             self._b["b2"] = file["b2"][:]
             self._b["b1"] = file["b1"][:]
 
-    def _backpropagate(self, X, y, y_pred, epoch):
+    def _backpropagate(self, X, y_inv, y_pred, epoch):
         """Backpropagation algorithm to train the network.
 
         Recall that the layer L values of the network are computed
@@ -438,7 +442,7 @@ class ANN:
         which can be e.g. the standard stochastic gradient descent or Adam. See the
         _update_w methods for further information.
         """
-        delta3 = self._eval_dcost(y, y_pred) * self._dafn3(self._z["z3"])
+        delta3 = self._eval_dcost(y_inv, y_pred) * self._dafn3(self._z["z3"])
         self._update_w3(delta3, epoch)
 
         delta2 = np.matmul(self._w["w3"].T, delta3) * self._dafn2(self._z["z2"])
@@ -641,7 +645,7 @@ class ANN:
             Dependent variable with numerical or categorical values of shape n x 1.
 
         epochs: int
-            Count of total feedforward/backpropagation passes through the network
+            Count of total feedforward/backpropagation passes through the network.
 
         Kwargs
         ------
@@ -653,8 +657,8 @@ class ANN:
             True if a separate validation data should be created, False otherwise. True by default.
 
         weights_save_path: str
-            Save path for best weights/biases in terms of minimizing the cost function, by default the cwd
-            and with name `weights.h5`.
+            Save path for best weights/biases in terms of minimizing the cost function, by default the current
+            working directory (cwd) and with file name `weights.h5`.
         """
         if len(X.shape) != 2:
             raise ValueError("Give array `X` as n x p, NumPy's .reshape(1, -1) might be helpful")
@@ -774,7 +778,7 @@ class ANN:
 
         Returns
         -------
-        NumPy array
+        NumPy array with shape (n,)
             Predicted output, for classification tasks as indices of unique values
             of original y (inverse format, see e.g. NumPy's unique). For regression
             returned data is not in any specific format, but just the predicted values.
@@ -798,7 +802,7 @@ class ANN:
         if self.method == "class":
             return np.argmax(y_pred, axis=0)
 
-        return y_pred.T
+        return y_pred.reshape(-1)
 
     def plot_fit_results(self, figsize: Tuple[int, int] = (10, 6)) -> None:
         """Plot fit results, cost and accuracy.

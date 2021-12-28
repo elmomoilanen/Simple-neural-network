@@ -33,7 +33,7 @@ def test_init_obj_not_accepted_hidden_nodes():
 
 
 def test_init_obj_not_accepted_method():
-    allowed_met = ",".join(ANN.allowed_methods)
+    allowed_met = ", ".join(ANN.allowed_methods)
 
     with pytest.raises(ValueError, match=rf"`method` must be one of {allowed_met}"):
         ann = ANN((5, 7), "")
@@ -56,7 +56,7 @@ def test_init_obj_method_property():
     ann = ANN((3, 3), "reg")
     ann.method = "classification"
 
-    allowed_met = ",".join(ANN.allowed_methods)
+    allowed_met = ", ".join(ANN.allowed_methods)
 
     with pytest.raises(ValueError, match=rf"`method` must be one of {allowed_met}"):
         ann.method = "classify"
@@ -65,7 +65,7 @@ def test_init_obj_method_property():
 
 
 def test_init_obj_not_accepted_attributes():
-    allowed_opt = ",".join(ANN.allowed_optimizers)
+    allowed_opt = ", ".join(ANN.allowed_optimizers)
 
     with pytest.raises(ValueError, match=rf"`optimizer` must be one of {allowed_opt}"):
         ann = ANN((1, 1), "classification", optimizer="momentum")
@@ -220,12 +220,31 @@ def test_momentum_and_adapter_weights():
         assert ann._mom_b[f"b{i}"].shape == ann._s_b[f"b{i}"].shape
 
 
+def test_cross_entropy_consistency():
+    ann = ANN((5, 5), "class")
+
+    y_inv = np.array([0, 2, 1])
+    # y_pred has largest probability for 0 and 1 of y_inv (first and third col)
+    y_pred = np.array([[0.6, 0.3, 0.15], [0.2, 0.4, 0.7], [0.2, 0.3, 0.15]])
+    # y_pred_other has largest probability for all y_inv values (it's giving correct prediction)
+    y_pred_other = np.array([[0.6, 0.3, 0.15], [0.2, 0.3, 0.7], [0.2, 0.4, 0.15]])
+
+    assert np.alltrue(y_pred.sum(axis=0) == 1)
+    assert np.alltrue(y_pred_other.sum(axis=0) == 1)
+
+    cost1 = ANN._cross_entropy(y_inv, y_pred)
+    cost2 = ANN._cross_entropy(y_inv, y_pred_other)
+
+    assert cost1 >= 0 and cost2 >= 0
+    # y_pred_other predictions are "better" than y_pred, it should have smaller cost value
+    assert cost1 > cost2
+
+
 def test_cross_entropy():
     ann = ANN((5, 5), "class")
 
-    x_type = np.array([1.0]).dtype
     y = np.array(["A", "B", "B", "C", "A"])
-    y_ohe, y_inv = ANN._transform_y(y, x_type)
+    y_ohe, y_inv = ANN._transform_y(y, np.float64)
 
     y_inv_uniq = len(np.unique(y_inv))
     assert y_inv_uniq == 3
@@ -237,7 +256,7 @@ def test_cross_entropy():
     cross_entr = ANN._cross_entropy(y_inv, y_pred)
     assert cross_entr >= 0
 
-    # other way to compute cross-entropy (slower but more intuitive)
+    # other way to compute cross-entropy (extra term 1e-9 in ANN cross entropy shouldn't matter)
     mtable = y_ohe * y_pred
     with np.errstate(divide="ignore"):
         m_log = np.where(mtable > 0, np.log(mtable), 0)
@@ -428,7 +447,6 @@ def test_predict_reg():
 
     # must have x.shape[0] predictions
     assert y_pred.shape[0] == x.shape[0]
-    assert y_pred.shape[1] == 1
 
 
 def test_predict_class():

@@ -12,4 +12,3 @@ poetry.lock
 *.npy
 *.ipynb
 .ipynb_checkpoints/
-_evo.py
