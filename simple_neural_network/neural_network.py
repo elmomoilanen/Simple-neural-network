@@ -7,7 +7,6 @@ public methods:
     Predict output for test data X.
 - plot_fit_results
     Plot cost and accuracy measures from the fitting step.
-
 """
 import os
 import math
@@ -242,6 +241,9 @@ class ANN:
 
     def _get_val_indices(self, x_rows):
         val_size = int(self._val_stats["size"] * x_rows)
+
+        if val_size == 0:
+            raise ValueError("Validation data size cannot be zero")
 
         all_idx = np.arange(x_rows)
         val_idx = self._rng.choice(all_idx, size=val_size, replace=False)
@@ -621,13 +623,9 @@ class ANN:
             logger.info(f"train cost: {self._train_stats['cost'][epoch - 1]:.3f}")
             logger.info(f"train acc: {self._train_stats['acc'][epoch - 1]:.3f}")
 
-            if not self._use_valid:
-                logger.info("####################")
-
         elif log_type == "valid" and print_log:
             logger.info(f"valid cost: {self._val_stats['cost'][epoch - 1]:.3f}")
             logger.info(f"valid acc: {self._val_stats['acc'][epoch - 1]:.3f}")
-            logger.info("####################")
 
     def fit(self, X: np.ndarray, y: np.ndarray, epochs: int = 100, **kwargs) -> None:
         """Fit the neural network.

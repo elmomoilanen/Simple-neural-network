@@ -4,8 +4,10 @@ import pytest
 
 from simple_neural_network.evolution import Evolution
 
-# Evolution class uses these
-params = ("hidden_nodes", "optimizer", "learning_rate", "lambda_", "activation1", "activation2")
+# init random number generator
+rg = np.random.default_rng()
+
+params = Evolution.allowed_hyperparameters
 
 
 def test_init_obj():
@@ -134,3 +136,25 @@ def test_splitting_data():
     assert x_test.shape[0] == y_test.shape[0]
 
     assert (x_train.shape[0] + x_test.shape[0]) == x.shape[0]
+
+
+def test_evolution_fitting():
+    evo = Evolution(generations=2, population_size=2)
+
+    x = rg.normal(size=(5, 2)) + 0.5
+    y = np.array(["red", "blue", "red", "green", "blue"])
+
+    hyperparams = evo.fit(
+        x,
+        y.reshape(-1, 1),
+        method_type="classification",
+        epochs=5,
+        early_stop_threshold=2,
+        use_validation=False,
+    )
+
+    assert len(hyperparams) == evo.pop_size
+
+    fitness_scores = np.array([param_set["fitness"] for param_set in hyperparams])
+    # first element should have the lowest score
+    assert np.argmin(fitness_scores) == 0

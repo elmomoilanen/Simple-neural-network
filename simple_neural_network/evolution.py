@@ -8,6 +8,10 @@ Strategy to achieve this:
 5) Reproduce N-(M+P) new members from the M+P survived members
 
 Repeat the process K times from step 2.
+
+public methods:
+- fit
+    Run the evolution based hyperparameter optimization.
 """
 import os
 import time
@@ -54,6 +58,15 @@ class Evolution:
     top_percentage = 0.6
     poor_percentage = 0.2
     mutate_threshold = 0.75
+
+    allowed_hyperparameters = (
+        "hidden_nodes",
+        "optimizer",
+        "learning_rate",
+        "lambda_",
+        "activation1",
+        "activation2",
+    )
 
     def __init__(self, generations: int, population_size: int) -> None:
         self.generations = generations
@@ -141,9 +154,9 @@ class Evolution:
     def _save_generation_fitness_score(self, generation, population):
         fitness_scores = np.array([member["fitness"] for member in population])
 
-        self._fitness_scores[generation][self._lowest_col] = np.min(fitness_scores)
-        self._fitness_scores[generation][self._highest_col] = np.max(fitness_scores)
-        self._fitness_scores[generation][self._median_col] = np.median(fitness_scores)
+        self._fitness_scores[generation, self._lowest_col] = np.min(fitness_scores)
+        self._fitness_scores[generation, self._highest_col] = np.max(fitness_scores)
+        self._fitness_scores[generation, self._median_col] = np.median(fitness_scores)
 
     def _select_by_fitness(self, population):
         members_sorted = sorted(population, key=lambda x: x["fitness"])
@@ -254,6 +267,9 @@ class Evolution:
         epochs: int, default 50
             Count of total feedforward/backpropagation passes through the network.
 
+        use_validation: bool, default True
+            Whether to use separate validation data in neural network fitting.
+
         Returns
         -------
         list: of dicts
@@ -270,7 +286,8 @@ class Evolution:
 
         early_stop_thres = int(kwargs.get("early_stop_threshold", 10))
         epochs = int(kwargs.get("epochs", 50))
-        weights_save_path = os.path.join(os.path.split(__file__), "_evo_weights.h5")
+        use_validation = bool(kwargs.get("use_validation", True))
+        weights_save_path = os.path.join(os.path.split(__file__)[0], "_evo_weights.h5")
 
         (x_train, y_train), (x_test, y_test) = self.split_data_to_train_and_test(X, y)
 
@@ -293,15 +310,21 @@ class Evolution:
                     epochs=epochs,
                     batch_size=32,
                     weights_save_path=weights_save_path,
+                    use_validation=use_validation,
                 )
 
                 y_pred = ann.predict(x_test, weights_path=weights_save_path)
                 self._remove_weights_file(weights_save_path)
 
-                param_set["fitness"] = eval_cost(y_test, y_pred, method=method_type)
+                param_set["fitness"] = eval_cost(
+                    y_test.reshape(-1), y_pred.reshape(-1), method=method_type
+                )
                 logger.info(f"fitness value (cost) for test data: {param_set['fitness']:.2f}")
 
-            self._save_generation_fitness_score(gener, population)
+            self._save_generation_fitness_score(gener - 1, population)
+
+            if gener == self.generations:
+                return sorted(population, key=lambda x: x["fitness"])
 
             new_population = self._select_by_fitness(population)
             self._mutate(new_population)
@@ -311,6 +334,6 @@ class Evolution:
 
             elapsed_time = time.perf_counter() - start_timestamp
             logger.info(f"elapsed time: {elapsed_time//60:.0f} m. {elapsed_time%60:.1f} s.")
-            logger.info("####################")
 
-        return sorted(population, key=lambda x: x["fitness"])
+        # should never land here
+        return []
