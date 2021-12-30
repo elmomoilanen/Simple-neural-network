@@ -323,15 +323,15 @@ class ANN:
     @staticmethod
     def _dcross_entropy(y_inv, y_pred):
         cols = np.arange(y_pred.shape[1])
-        non_zero_y = y_pred[y_inv, cols]
 
-        non_zero_y_inv = np.zeros(non_zero_y.shape)
+        non_zero_y = y_pred[y_inv, cols]
+        non_zero_y_inv = np.zeros(non_zero_y.shape, dtype=non_zero_y.dtype)
 
         pos_mask = non_zero_y > 0
-        non_zero_y_inv[pos_mask] = -1.0 / non_zero_y[pos_mask]
-        non_zero_y_inv[~pos_mask] = 0.0
 
-        non_zero_y_inv /= y_inv.shape[0]
+        if pos_mask.sum() > 0:
+            non_zero_y_inv[pos_mask] = -1.0 / non_zero_y[pos_mask]
+            non_zero_y_inv[pos_mask] /= y_inv.shape[0]
 
         dmatrix = np.zeros_like(y_pred)
         dmatrix[y_inv, cols] = non_zero_y_inv
@@ -879,8 +879,15 @@ class ANN:
             ax[0].plot(val_filt_cost, color="orange", label="valid")
             ax[1].plot(val_filt_acc, color="orange", label="valid")
 
-        ax[0].set_ylabel("cost")
-        ax[1].set_ylabel("accuracy")
+        if self.method == "class":
+            cost_func = "cross entropy"
+            acc_func = "correct label"
+        else:
+            cost_func = "mse"
+            acc_func = "R squared"
+
+        ax[0].set_ylabel(f"cost ({cost_func})")
+        ax[1].set_ylabel(f"accuracy ({acc_func})")
 
         for j in range(2):
             ax[j].set_xlabel("epoch")
