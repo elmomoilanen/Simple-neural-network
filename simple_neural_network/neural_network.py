@@ -5,6 +5,8 @@ public methods:
     Fit the neural network for data X and y.
 - predict
     Predict output for test data X.
+- get_fit_results
+    Provides a summary of fitting results.
 - plot_fit_results
     Plot cost and accuracy measures from the fitting step.
 """
@@ -13,7 +15,7 @@ import math
 import time
 import logging
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Union
 
 import numpy as np
 import h5py
@@ -314,11 +316,9 @@ class ANN:
         # y_inv[i] is the correct y inv value for column i (and only value equal to one)
         # filter out probabilities (y_pred values) for which y is zero
         non_zero_y = y_pred[y_inv, np.arange(y_pred.shape[1])]
-
-        # add small term to avoid taking logarithm from zero
         log_y = np.log(non_zero_y + 1e-9)
 
-        return -np.mean(log_y)
+        return max(-np.mean(log_y), 1e-20)
 
     @staticmethod
     def _dcross_entropy(y_inv, y_pred):
@@ -341,7 +341,9 @@ class ANN:
     @staticmethod
     def _mse(y, y_pred):
         square_of_err = (y.T - y_pred) ** 2
-        return np.mean(square_of_err) * 0.5
+        mse = np.mean(square_of_err) * 0.5
+
+        return max(mse, 1e-20)
 
     @staticmethod
     def _dmse(y, y_pred):
@@ -380,9 +382,9 @@ class ANN:
         ss_resid = np.sum((y_inv.T - y_pred) ** 2)
 
         if ss_total < 1e-6:
-            return 0.0
+            return 1e-20
 
-        return max(1.0 - (ss_resid / ss_total), 0.0)
+        return max(1.0 - (ss_resid / ss_total), 1e-20)
 
     def _compute_predict(self, X):
         h1_pred = self._afn1(np.matmul(self._w["w1"], X.T) + self._b["b1"])
@@ -801,6 +803,49 @@ class ANN:
             return np.argmax(y_pred, axis=0)
 
         return y_pred.reshape(-1)
+
+    def get_fit_results(self) -> Dict[str, Union[float, int]]:
+        """Get a summary of fit results.
+
+        Returns
+        -------
+        dict
+            Has always first-level keys `epochs` and `train_data`. If validation data
+            was used during fitting, a key `validation_data` is also included. Both
+            keys with "_data" suffix provide access to dicts with keys `smallest_cost`,
+            `smallest_cost_epoch`, `best_acc` and `best_acc_epoch`.
+        """
+        if not isinstance(self._train_stats["cost"], np.ndarray):
+            raise ValueError("Nothing to plot yet, train the model first")
+
+        train_cost, train_acc = self._train_stats["cost"], self._train_stats["acc"]
+        # filter out zero values (no results for these epochs)
+        train_filt_cost = train_cost[train_cost > 0]
+        train_filt_acc = train_acc[train_acc > 0]
+
+        results = {
+            "epochs": train_filt_cost.shape[0],
+            "train_data": {
+                "smallest_cost": np.min(train_filt_cost),
+                "smallest_cost_epoch": np.argmin(train_filt_cost),
+                "best_acc": np.max(train_filt_acc),
+                "best_acc_epoch": np.argmax(train_filt_acc),
+            },
+        }
+
+        if isinstance(self._val_stats["cost"], np.ndarray) and len(self._val_stats["cost"]) > 0:
+            val_cost, val_acc = self._val_stats["cost"], self._val_stats["acc"]
+            val_filt_cost = val_cost[val_cost > 0]
+            val_filt_acc = val_acc[val_acc > 0]
+
+            results["validation_data"] = {
+                "smallest_cost": np.min(val_filt_cost),
+                "smallest_cost_epoch": np.argmin(val_filt_cost),
+                "best_acc": np.max(val_filt_acc),
+                "best_acc_epoch": np.argmax(val_filt_acc),
+            }
+
+        return results
 
     def plot_fit_results(self, figsize: Tuple[int, int] = (10, 6)) -> None:
         """Plot fit results, cost and accuracy.

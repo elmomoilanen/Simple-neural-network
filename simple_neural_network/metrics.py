@@ -86,4 +86,4 @@ def eval_cost(y_true: np.ndarray, y_pred: np.ndarray, method: str) -> float:
         raise ValueError(f"Cannot evaluate cost for learning type `{method}`")
 
     square_of_err = (y_true - y_pred) ** 2
-    return np.mean(square_of_err)
+    return max(np.mean(square_of_err), 1e-20)

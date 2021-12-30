@@ -9,6 +9,3 @@ poetry.lock
 *.log.[1-9]
 
 *.h5
-*.npy
-*.ipynb
-.ipynb_checkpoints/

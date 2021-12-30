@@ -462,3 +462,39 @@ def test_predict_class():
     assert y_pred.shape[0] == x.shape[0]
     # prediction is in inverse format
     assert np.alltrue((y_pred >= 0) & (y_pred < y_categories))
+
+
+def test_get_fit_results():
+    ann = ANN((3, 3), "reg", verbose_level="low")
+
+    x = rg.normal(size=(5, 2)) + 0.5
+    y = np.array([-1.0, 0.5, -0.5, 1.0, 0.5])
+
+    w_save_path = os.path.join(FOLDER_PATH, "weights.h5")
+    epochs = 3
+
+    ann.fit(
+        x,
+        y.reshape(-1, 1),
+        epochs=epochs,
+        use_validation=False,
+        weights_save_path=w_save_path,
+    )
+
+    assert os.path.exists(w_save_path)
+    remove_file(w_save_path)
+
+    results = ann.get_fit_results()
+    # validation wasn't used
+    mandatory_keys = ("epochs", "train_data")
+    nested_keys = ("smallest_cost", "smallest_cost_epoch", "best_acc", "best_acc_epoch")
+
+    assert isinstance(results, dict)
+    results_keys = set(results.keys())
+    # no other keys than mandatory
+    assert len(results_keys.difference(mandatory_keys)) == 0
+
+    assert results["epochs"] == epochs
+
+    results_nested_keys = set(results["train_data"].keys())
+    assert len(results_nested_keys.difference(nested_keys)) == 0

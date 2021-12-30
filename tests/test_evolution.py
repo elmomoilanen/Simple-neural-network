@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.lib.arraysetops import isin
 import pytest
 
 from simple_neural_network.evolution import Evolution
@@ -138,6 +137,7 @@ def test_splitting_data():
     assert (x_train.shape[0] + x_test.shape[0]) == x.shape[0]
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_evolution_fitting():
     evo = Evolution(generations=2, population_size=2)
 
