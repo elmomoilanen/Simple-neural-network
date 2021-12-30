@@ -816,7 +816,7 @@ class ANN:
             `smallest_cost_epoch`, `best_acc` and `best_acc_epoch`.
         """
         if not isinstance(self._train_stats["cost"], np.ndarray):
-            raise ValueError("Nothing to plot yet, train the model first")
+            raise ValueError("Nothing to return yet, train the model first")
 
         train_cost, train_acc = self._train_stats["cost"], self._train_stats["acc"]
         # filter out zero values (no results for these epochs)
