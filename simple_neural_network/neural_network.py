@@ -113,7 +113,6 @@ class ANN:
     >>> y = np.argmax(0.4 * np.sin(X) + 0.6 * np.cos(X) + 0.1, axis=1)
     >>> ann = ANN(hidden_nodes=(40, 15), learning_rate=1.0, activation1="tanh", early_stop_threshold=50)
     >>> ann.fit(X, y.reshape(-1, 1), epochs=500, batch_size=50)
-    >>> ann.plot_fit_results()
     """
 
     allowed_methods = ("class", "reg")
@@ -775,6 +774,7 @@ class ANN:
 
         weights_path: str
             File path for pre-trained weights, otherwise currently available weights.
+            These is likely needed if one wants to use optimal weights after fitting.
 
         Returns
         -------
@@ -788,7 +788,7 @@ class ANN:
 
         if weights_path is not None:
             if not os.path.isfile(weights_path):
-                raise ValueError(f"Cannot find file {weights_path}")
+                raise FileNotFoundError(f"Cannot find file {weights_path}")
 
             self._load_weights(weights_path)
         else:

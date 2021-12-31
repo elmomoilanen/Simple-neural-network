@@ -18,13 +18,13 @@ which creates a virtual environment for the library and installs required non-de
 
 ## Use ##
 
-Module *neural_network* contains the *ANN* class which implements the two hidden layer neural network model. Its two main public methods are *fit* and *predict*, other methods *get_fit_results* and *plot_fit_results* can be used to check results of the fitting step. Module *evolution* contains the *Evolution* class which implements an evolution based algorithm to find the optimal hyperparameter combination. This is also used via public method *fit*.
+Module *neural_network* contains the *ANN* class which implements the two hidden layer neural network model. Its two main public methods are *fit* and *predict*, other two methods *get_fit_results* and *plot_fit_results* can be used to inspect results of the fitting step. Selecting appropriate hyperparameters is an important part of the neural network design and for this respect module *evolution* contains the *Evolution* class with a public method *fit* which implements an evolution based algorithm to search an optimal hyperparameter combination.
 
 The following example illustrates the usage of this library.
 
 Consider a typical supervised learning task where the aim is to learn a function **f** between provided example input-output (X-y) pairs such that the learned function would also generalize well for unseen data. Assume that X is a numerical data matrix of shape n x p (n observations, p attributes) and y is an array of labels of size n. As the dependent variable y contains labels, the function **f** classifies each *x_i* from the input space to the output space.
 
-Following code imports the ANN class from neural_network module and fits the model (or learns the function) for the example X-y pairs. We notice that in order to run the model fitting (ann.fit), a certain set of hyperparameters must be set in advance (when instantiating the *ann* object). This can be done manually or automated by an additional hyperparameter optimization step. More on this latter option later.
+Following code imports the ANN class from the neural_network module and fits a model (learns function **f**) for the example X-y pairs. We notice that in order to run the model fitting (ann.fit), a certain set of hyperparameters must be set in advance. This can be done manually or automated by an additional hyperparameter optimization step. More on this latter option later.
 
 ```python
 from simple_neural_network.neural_network import ANN
@@ -39,19 +39,34 @@ ann.get_fit_results()
 ann.plot_fit_results()
 ```
 
-In case of neural networks, learning is said to happen when the weights between neurons update during fitting. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting if the results doesn't get better in some T contiguous number of steps (more precisely, total passes through the network aka epochs). In this case of an early stop and actually in all other cases too, the optimal weights are saved to a file, by default to the current working directory with name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting procedure goes to the end.
+In case of neural networks, learning is said to happen when the weights between neurons adjust during fitting. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). In the case of an early stop and actually in all other cases too, the optimal weights are saved to a file, by default to the current working directory with name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes to the end.
 
-After the model has been fitted we might encounter new data X_new for which we would like to get the predicted labels y_new. This can simply be done by calling the predict method of the ANN class, and either assuming that a previously created and fitted object is still in memory or in other case passing a file path for the pre-trained neural network weights. For now, we continue the previous code snippet and assume that the weights of the best model found during fitting are still available.
+After the model has been fitted we might encounter new data X_new for which we would like to get the predicted labels y_new. This can simply be done by calling the predict method of the ANN class, and either assuming that a previously created and fitted object is still in memory or in other case passing a file path for the pre-trained neural network weights. For now, we continue the previous code snippet and assume that the weights of the best model found during fitting are still available. Notice however that this assumption doesn't usually hold in practise and in this case one needs to pass the path to the weights file. 
 
 If for some reason we got also y_new (true labels for X_new), we can evaluate the performance of the prediction by using the *confusion_matrix* function from the metrics module.
 
 ```python
 y_new_pred = ann.predict(X_new)
 
-# assume we got also y_new, so import the confusion matrix to evaluate prediction performance
+# import the confusion matrix to evaluate prediction performance
 from simple_neural_network.metrics import confusion_matrix
 
 conf_matrix = confusion_matrix(y_true=y_new, y_pred=y_new_pred)
 ```
 
 Rows of the confusion matrix represent the true labels with zero-based indexing and columns corresponding predicted labels. For example, entry (0, 1) of the table represents a case where the true label is zero and predicted one. Thus, diagonal entries indicate the correctly predicted counts.
+
+At the end of this example let's get back to the hyperparameter aspect. Finding optimal or even good hyperparameters is a difficult task, one and maybe the most common possibility being just trying different combinations manually. As mentioned above, other option is to use an evolutionary algorithm and for the case of this library the algorithm found in *evolution* module. This evolution algorithm can be seen as a bit enhanced version of the basic cross-validation approach that would likely take much more time to complete.
+
+Evolution algorithm can be used as follows (assume the same data X-y that was used above)
+
+```python
+from simple_neural_network.evolution import Evolution
+
+evo = Evolution(generations=10, population_size=20)
+
+# recall that the learning type was classification for this data
+evo.fit(X, y.reshape(-1, 1), "classification")
+```
+
+where the result of *fit* method call will be a list of parameter combinations of size 20 where the first combination is the most fittest (had lowest cost function value). This combination can be passed for a new ANN object or further narrow down search region of the hyperparameter space.

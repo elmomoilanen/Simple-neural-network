@@ -26,6 +26,16 @@ def test_init_obj():
     assert other_popu == evo._other_popu
 
 
+def test_init_obj_kwargs():
+    evo = Evolution(
+        10, 10, neurons=(90, 95, 100), learning_rates=(0.1, 0.5), lambdas=(0.0, 1.0, 5.0)
+    )
+
+    assert len(evo._neurons) == 3
+    assert len(evo._learning_rates) == 2
+    assert len(evo._lambdas) == 3
+
+
 def test_init_obj_invalid_popu_partition():
     evo = Evolution(generations=2, population_size=3)
 

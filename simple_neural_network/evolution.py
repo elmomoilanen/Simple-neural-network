@@ -1,4 +1,7 @@
-"""Implements an evolution algorithm to find the best hyperparameter combination.
+"""Implements an evolution algorithm to search an optimal hyperparameter combination.
+
+Target is to find globally optimal combination but obviously it's not guaranteed that
+such can be found with this algorithm or the start setup of parameters.
 
 Strategy to achieve this:
 1) Initialize a population of size N
@@ -31,6 +34,12 @@ logger = logging.getLogger(__name__)
 class Evolution:
     """Algorithm to search optimal set of hyperparameters.
 
+    From the parameters, optimizer and activation functions
+    are restricted by the `ANN` class and thus cannot be passed
+    here from the user. On the contrary, neurons, learning_rates
+    and lambdas (L2 regularization) can be passed by passing them
+    via kwargs. They must be given as tuples.
+
     Params
     ------
     generations: int, >= 1
@@ -38,6 +47,12 @@ class Evolution:
 
     population_size: int, >= 2
         Size of the population, set of hyperparameters.
+
+    Kwargs
+    ------
+    neurons: tuple
+    learning_rates: tuple
+    lambdas: tuple
 
     Examples
     --------
@@ -52,7 +67,9 @@ class Evolution:
     >>> y = 0.7 * np.sin(X[:, 0]) + 0.3 * np.cos(X[:, 1])
     >>> from simple_neural_network.evolution import Evolution
     >>> evo = Evolution(generations=2, population_size=3)
-    >>> evo.fit(X, y.reshape(-1, 1), "regression", epochs=10)
+    >>> results = evo.fit(X, y.reshape(-1, 1), "regression", epochs=10)
+    >>> len(results)
+    3
     """
 
     top_percentage = 0.6
@@ -68,7 +85,7 @@ class Evolution:
         "activation2",
     )
 
-    def __init__(self, generations: int, population_size: int) -> None:
+    def __init__(self, generations: int, population_size: int, **kwargs) -> None:
         self.generations = generations
 
         self._top_popu = None
@@ -80,13 +97,15 @@ class Evolution:
         self._fitness_scores = None
         self._lowest_col, self._highest_col, self._median_col = range(3)
 
-        self._neurons = (
+        default_neurons = (
             list(range(5, 50, 5)) + list(range(50, 225, 25)) + list(range(250, 1250, 250))
         )
+
         self._activations = ANN.allowed_hidden_activations
         self._optimizers = ANN.allowed_optimizers
-        self._learning_rates = (1e-3, 1e-2, 0.1, 0.5, 1.0)
-        self._lambdas = (0.0, 5.0, 25.0, 50.0, 500.0)
+        self._neurons = tuple(kwargs.get("neurons", default_neurons))
+        self._learning_rates = tuple(kwargs.get("learning_rates", (1e-3, 1e-2, 0.1, 0.5, 1.0)))
+        self._lambdas = tuple(kwargs.get("lambdas", (0.0, 5.0, 25.0, 50.0)))
 
         self._param_set = {
             "hidden_nodes": self._neurons,
@@ -210,7 +229,8 @@ class Evolution:
     @staticmethod
     def _remove_weights_file(file_path):
         if not os.path.isfile(file_path):
-            raise ValueError(f"Not a file or cannot find `{file_path}`")
+            logger.warning(f"Not a file or cannot find `{file_path}`")
+            return
 
         os.unlink(file_path)
         time.sleep(0.5)
@@ -246,6 +266,10 @@ class Evolution:
     def fit(self, X: np.ndarray, y: np.ndarray, method_type: str, **kwargs) -> List[Dict]:
         """Run evolution based hyperparameter optimization.
 
+        Algorithm seeks the optimal parameter combination from the parameter space.
+        At the end of last generation, a list of parameter combinations is returned
+        such that the first is the most fittest compared to others.
+
         Params
         ------
         X: NumPy array
@@ -259,7 +283,7 @@ class Evolution:
 
         Kwargs
         ------
-        early_stop_threshold: int, default 10
+        early_stop_threshold: int, default 25
             Restrict the number of total training passes (epochs) through the network
             to this value T when the value of the cost function doesn't decrease in T
             contiguous total passes.
@@ -284,7 +308,7 @@ class Evolution:
         if X.shape[0] != y.shape[0]:
             raise ValueError("Dimension mismatch for arrays, must be X.shape[0] == y.shape[0]")
 
-        early_stop_thres = int(kwargs.get("early_stop_threshold", 10))
+        early_stop_thres = int(kwargs.get("early_stop_threshold", 25))
         epochs = int(kwargs.get("epochs", 50))
         use_validation = bool(kwargs.get("use_validation", True))
         weights_save_path = os.path.join(os.path.split(__file__)[0], "_evo_weights.h5")
@@ -302,7 +326,12 @@ class Evolution:
 
             for iter, param_set in enumerate(population):
                 logger.info(f"hyperparameter set {iter+1}/{len(population)}")
-                ann = ANN(**param_set, method=method_type, early_stop_threshold=early_stop_thres)
+                ann = ANN(
+                    **param_set,
+                    method=method_type,
+                    early_stop_threshold=early_stop_thres,
+                    verbose_level="mid",
+                )
 
                 ann.fit(
                     x_train,
@@ -313,14 +342,20 @@ class Evolution:
                     use_validation=use_validation,
                 )
 
-                y_pred = ann.predict(x_test, weights_path=weights_save_path)
-                self._remove_weights_file(weights_save_path)
+                try:
+                    y_pred = ann.predict(x_test, weights_path=weights_save_path)
+                except FileNotFoundError as err:
+                    logger.warning(err)
+                    # assuming cost is used as fitness, +inf is the worst then
+                    param_set["fitness"] = np.inf
+                    continue
 
                 param_set["fitness"] = eval_cost(
                     y_test.reshape(-1), y_pred.reshape(-1), method=method_type
                 )
                 logger.info(f"fitness value (cost) for test data: {param_set['fitness']:.2f}")
 
+            self._remove_weights_file(weights_save_path)
             self._save_generation_fitness_score(gener - 1, population)
 
             if gener == self.generations:

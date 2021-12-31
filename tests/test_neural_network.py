@@ -464,6 +464,16 @@ def test_predict_class():
     assert np.alltrue((y_pred >= 0) & (y_pred < y_categories))
 
 
+def test_predict_file_not_found():
+    ann = ANN((5, 3), "class")
+
+    x = rg.normal(size=(5, 2))
+    file_path = "file_certainly_not_existing.test"
+
+    with pytest.raises(FileNotFoundError, match=rf"Cannot find file {file_path}"):
+        ann.predict(x, weights_path=file_path)
+
+
 def test_get_fit_results():
     ann = ANN((3, 3), "reg", verbose_level="low")
 
