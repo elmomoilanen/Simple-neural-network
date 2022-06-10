@@ -486,11 +486,11 @@ class ANN:
 
             exp = epoch if epoch > 0 else 1
 
-            mom_w3_new = self._mom_w["w3"] / (1.0 - self._mom_beta1 ** exp)
-            mom_b3_new = self._mom_b["b3"] / (1.0 - self._mom_beta1 ** exp)
+            mom_w3_new = self._mom_w["w3"] / (1.0 - self._mom_beta1**exp)
+            mom_b3_new = self._mom_b["b3"] / (1.0 - self._mom_beta1**exp)
 
-            s_w3_new = self._s_w["w3"] / (1.0 - self._mom_beta2 ** exp)
-            s_b3_new = self._s_b["b3"] / (1.0 - self._mom_beta2 ** exp)
+            s_w3_new = self._s_w["w3"] / (1.0 - self._mom_beta2**exp)
+            s_b3_new = self._s_b["b3"] / (1.0 - self._mom_beta2**exp)
 
             self._w["w3"] = self._w["w3"] - eps * (
                 mom_w3_new / (np.where(s_w3_new > 0, np.sqrt(s_w3_new), 0.0) + 1.0e-9)
@@ -531,11 +531,11 @@ class ANN:
 
             exp = epoch if epoch > 0 else 1
 
-            mom_w2_new = self._mom_w["w2"] / (1.0 - self._mom_beta1 ** exp)
-            mom_b2_new = self._mom_b["b2"] / (1.0 - self._mom_beta1 ** exp)
+            mom_w2_new = self._mom_w["w2"] / (1.0 - self._mom_beta1**exp)
+            mom_b2_new = self._mom_b["b2"] / (1.0 - self._mom_beta1**exp)
 
-            s_w2_new = self._s_w["w2"] / (1.0 - self._mom_beta2 ** exp)
-            s_b2_new = self._s_b["b2"] / (1.0 - self._mom_beta2 ** exp)
+            s_w2_new = self._s_w["w2"] / (1.0 - self._mom_beta2**exp)
+            s_b2_new = self._s_b["b2"] / (1.0 - self._mom_beta2**exp)
 
             self._w["w2"] = self._w["w2"] - eps * (
                 mom_w2_new / (np.where(s_w2_new > 0, np.sqrt(s_w2_new), 0.0) + 1.0e-9)
@@ -576,11 +576,11 @@ class ANN:
 
             exp = epoch if epoch > 0 else 1
 
-            mom_w1_new = self._mom_w["w1"] / (1.0 - self._mom_beta1 ** exp)
-            mom_b1_new = self._mom_b["b1"] / (1.0 - self._mom_beta1 ** exp)
+            mom_w1_new = self._mom_w["w1"] / (1.0 - self._mom_beta1**exp)
+            mom_b1_new = self._mom_b["b1"] / (1.0 - self._mom_beta1**exp)
 
-            s_w1_new = self._s_w["w1"] / (1.0 - self._mom_beta2 ** exp)
-            s_b1_new = self._s_b["b1"] / (1.0 - self._mom_beta2 ** exp)
+            s_w1_new = self._s_w["w1"] / (1.0 - self._mom_beta2**exp)
+            s_b1_new = self._s_b["b1"] / (1.0 - self._mom_beta2**exp)
 
             self._w["w1"] = self._w["w1"] - eps * (
                 mom_w1_new / (np.where(s_w1_new > 0, np.sqrt(s_w1_new), 0.0) + 1.0e-9)
