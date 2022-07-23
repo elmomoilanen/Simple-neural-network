@@ -10,12 +10,12 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     Pass arrays in their original value labels (numerical, categorical) or
     in their inverse format. E.g., the inverse of ["a", "b"] is [0, 1].
 
-    Params
-    ------
-    y_true: NumPy array
+    Parameters
+    ----------
+    y_true : NumPy array
         True/actual y with numerical or categorical values of shape (n,).
 
-    y_pred: NumPy array
+    y_pred : NumPy array
         Predicted y with numerical or categorical values of shape (n,).
 
     Returns
@@ -47,15 +47,15 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
 def eval_cost(y_true: np.ndarray, y_pred: np.ndarray, method: str) -> float:
     """Evaluate cost of the neural network model.
 
-    Params
-    ------
-    y_true: NumPy array
+    Parameters
+    ----------
+    y_true : NumPy array
         True/actual y with numerical or categorical values of shape (n,).
 
-    y_pred: NumPy array
+    y_pred : NumPy array
         Predicted y with numerical or categorical values of shape (n,).
 
-    method: str
+    method : str
         Type of learning, either `class` for classification or `reg` for regression.
 
     Returns

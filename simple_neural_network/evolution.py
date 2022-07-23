@@ -1,9 +1,10 @@
 """Implements an evolution algorithm to search an optimal hyperparameter combination.
 
 Target is to find globally optimal combination but obviously it's not guaranteed that
-such can be found with this algorithm or the start setup of parameters.
+such solution can be found with this algorithm or the initial setup of parameters.
 
-Strategy to achieve this:
+Strategy is the follows:
+
 1) Initialize a population of size N
 2) Compute fitness score for each member of the population
 3) Order members by fitness and select the top M (< N) performers and also few P (< M) of the worst
@@ -11,10 +12,6 @@ Strategy to achieve this:
 5) Reproduce N-(M+P) new members from the M+P survived members
 
 Repeat the process K times from step 2.
-
-public methods:
-- fit
-    Run the evolution based hyperparameter optimization.
 """
 import os
 import time
@@ -34,32 +31,31 @@ logger = logging.getLogger(__name__)
 class Evolution:
     """Algorithm to search optimal set of hyperparameters.
 
-    From the parameters, optimizer and activation functions
-    are restricted by the `ANN` class and thus cannot be passed
-    here from the user. On the contrary, neurons, learning_rates
-    and lambdas (L2 regularization) can be passed by passing them
-    via kwargs. They must be given as tuples.
+    From the hyperparameters, optimizer and activation functions are restricted
+    by the `ANN` class and thus cannot be passed here from the user. On the contrary,
+    neurons, learning_rates and lambdas (L2 regularization) can be passed by
+    giving them via kwargs. They must be given as tuples.
 
-    Params
-    ------
-    generations: int, >= 1
+    Parameters
+    ----------
+    generations : int >= 1
         Number of generations of the evolution.
 
-    population_size: int, >= 2
+    population_size : int >= 2
         Size of the population, set of hyperparameters.
 
-    Kwargs
-    ------
-    neurons: tuple
-    learning_rates: tuple
-    lambdas: tuple
+    Other parameters
+    ----------------
+    **kwargs : dict
+        Keyword arguments `neurons`, `learning_rates` and `lambdas` are
+        used if given as tuples. If not given, reasonable default values
+        are used instead.
 
     Examples
     --------
-    Example for regression type learning task with synthetic data.
-    There will be two generations and for every generation three
-    fitted neural networks (with population size three) that each
-    have 10 epochs.
+    Consider a regression type learning task with synthetic data. There will
+    be two generations and for every generation three fitted neural networks
+    (with population size three) that each have 10 epochs.
 
     >>> import numpy as np
     >>> rg = np.random.default_rng()
@@ -235,19 +231,21 @@ class Evolution:
         os.unlink(file_path)
         time.sleep(0.5)
 
-    def split_data_to_train_and_test(self, X: np.ndarray, y: np.ndarray) -> Tuple:
+    def split_data_to_train_and_test(
+        self, X: np.ndarray, y: np.ndarray
+    ) -> Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]:
         """Split data randomly to train and test parts.
 
         Test part will contain maximum of 10 % or 1 observation of the original data.
 
-        Params
-        ------
-        X: NumPy array
-        y: NumPy array
+        Parameters
+        ----------
+        X : NumPy array
+        y : NumPy array
 
         Returns
         -------
-        Tuple: of two tuples of NumPy arrays
+        Tuple : Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]
             First of the tuples contains x_train and y_train arrays (90 % or n-1 of the obs).
             Second and last of the tuples contains x_test and y_test (10 % or 1 obs of the data).
         """
@@ -263,43 +261,52 @@ class Evolution:
 
         return (x_train, y_train), (x_test, y_test)
 
-    def fit(self, X: np.ndarray, y: np.ndarray, method_type: str, **kwargs) -> List[Dict]:
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        method_type: str,
+        early_stop_threshold: int = 25,
+        epochs: int = 50,
+        use_validation: bool = True,
+    ) -> List[Dict]:
         """Run evolution based hyperparameter optimization.
 
         Algorithm seeks the optimal parameter combination from the parameter space.
         At the end of last generation, a list of parameter combinations is returned
         such that the first is the most fittest compared to others.
 
-        Params
-        ------
-        X: NumPy array
+        Parameters
+        ----------
+        X : NumPy array
             Numerical data matrix of shape n x p, n observations and p attributes.
 
-        y: NumPy array
+        y : NumPy array
             Dependent variable with numerical or categorical values of shape n x 1.
 
-        method_type: str
+        method_type : str
             Type of learning, either `class` for classification or `reg` for regression.
 
-        Kwargs
-        ------
-        early_stop_threshold: int, default 25
-            Restrict the number of total training passes (epochs) through the network
+        early_stop_threshold : int
+            Restricts the number of total training passes (epochs) through the network
             to this value T when the value of the cost function doesn't decrease in T
-            contiguous total passes.
+            contiguous total passes. Defaults to 25.
 
-        epochs: int, default 50
+        epochs : int
             Count of total feedforward/backpropagation passes through the network.
+            Default value is 50.
 
-        use_validation: bool, default True
+        use_validation : bool
             Whether to use separate validation data in neural network fitting.
+            True as default.
 
         Returns
         -------
-        list: of dicts
-            Hyperparameter population, sorted in ascending order in terms of the fitness
-            which is the cost function value. Thus the first element of this list contains
-            the "best" hyperparameter combination.
+        list
+            Of dicts containing hyperparameter combinations. Here the whole hyperparameter
+            population is sorted in ascending order in terms of the fitness which is the
+            cost function value. Thus the first element of this list contains the "best"
+            hyperparameter combination.
         """
         if len(X.shape) != 2:
             raise ValueError("Give array `X` as n x p, NumPy's .reshape(1, -1) might be helpful")
@@ -308,9 +315,10 @@ class Evolution:
         if X.shape[0] != y.shape[0]:
             raise ValueError("Dimension mismatch for arrays, must be X.shape[0] == y.shape[0]")
 
-        early_stop_thres = int(kwargs.get("early_stop_threshold", 25))
-        epochs = int(kwargs.get("epochs", 50))
-        use_validation = bool(kwargs.get("use_validation", True))
+        early_stop_thres = int(early_stop_threshold)
+        epochs = int(epochs)
+        use_validation = bool(use_validation)
+
         weights_save_path = os.path.join(os.path.split(__file__)[0], "_evo_weights.h5")
 
         (x_train, y_train), (x_test, y_test) = self.split_data_to_train_and_test(X, y)

@@ -1,11 +1,19 @@
-"""Guide to simple_neural_network package.
+"""Quick guide to simple neural network package.
 
-Package contains following modules:
-- neural_network
-- evolution
+Package contains four modules in total.
 
-`ANN` class from the neural_network module implements
-the main functionality of this package.
+1) activations
+    Contains implementations for activation functions, e.g. tanh and relu.
+    
+2) evolution
+    Contains implementation for Evolution class.
+
+3) metrics
+    Contains metrics to evaluate performance of neural networks.
+
+4) neural_network
+    Contain implementation for ANN class which has the core functionality
+    of this package.
 """
 __version__ = "1.0.0"
 

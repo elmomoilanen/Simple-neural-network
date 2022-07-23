@@ -1,15 +1,4 @@
-"""Implements the neural network class `ANN`.
-
-public methods:
-- fit
-    Fit the neural network for data X and y.
-- predict
-    Predict output for test data X.
-- get_fit_results
-    Provides a summary of fitting results.
-- plot_fit_results
-    Plot cost and accuracy measures from the fitting step.
-"""
+"""Implements the neural network class `ANN`."""
 import os
 import math
 import time
@@ -42,68 +31,70 @@ logger = logging.getLogger(__name__)
 class ANN:
     """Two hidden layer fully-connected artificial neural network.
 
-    Params
-    ------
-    hidden_nodes: tuple, of two int values
-        Node counts in the 1st and 2nd hidden layers.
+    Parameters
+    ----------
+    hidden_nodes : Tuple[int, int]
+        Node counts in the 1st and 2nd hidden layers. Default counts are 50.
 
-    method: str
-        Type of learning, either `class` for classification or `reg` for regression.
+    method : str
+        Type of learning, either `class` for classification (is the default)
+        or `reg` for regression.
 
-    Kwargs
-    ------
-    optimizer: str, default `sgd`
-        Optimization algorithm for learning, either `sgd` or `adam`.
+    optimizer : str
+        Optimization algorithm for learning, either the default `sgd` or `adam`.
 
-    decay_rate: non-negative float, default 0.0
-        Adaptive learning rate can be used during learning and it's determined
-        by a formula exp(-decay_rate * epoch). By default, decay rate equals 0
-        meaning that this learning rate will be constant one and determined instead
-        by the `learning_rate` attribute.
+    decay_rate : float non-negative
+        Defaults to 0.0. Adaptive learning rate can be used during learning and
+        it's determined by a formula exp(-decay_rate * epoch). However, the default
+        decay rate 0 indicates that the previous formula equals one and in that case
+        the learning rate will be completely determined by the attribute `learning_rate`.
 
-    learning_rate: non-negative float, default 0.1
-        If `decay_rate` is zero and hence exp(-decay_rate * epoch) equals one,
-        this constant rate will be used with 0.1 as default value. Otherwise,
-        when positive decay rate is in use, this rate will not have any significance.
+    learning_rate : float non-negative
+        Defaults to 0.1. If attribute `decay_rate` equals zero this constant
+        rate will be used. Otherwise, when positive decay rate is in use,
+        this rate will not have any significance.
 
-    lambda_: non-negative float, default 0.0
+    lambda_ : float non-negative
         Strength of L2 regularization, controls the squared l2-norm that
-        is added to the cost function. By default equals zero, in which case
-        regularization is not applied. The complete regularization term is
+        is added to the cost function. By default 0.0 and in this case the
+        regularization is not applied. Complete regularization term is
         lambda / 2n * squared l2-norm of weights, where n is the observation count.
 
-    early_stop_threshold: int, default unbounded
+    early_stop_threshold : float
         Restrict the number of total training passes (epochs) through the network
         by setting this number. Given stop threshold T, if the value of the cost
         function doesn't decrease in T contiguous total passes, training is stopped.
-        By default, this threshold is not applied.
+        By default, this threshold is not applied (if an explicit value not given).
+        Almost always, give this as whole number e.g. 50.
 
-    activation1: str, default `relu`
+    activation1 : str
         Name of the activation function between inputs and first hidden layer.
-        Options are limited to `tanh`, `relu`, `leaky_relu` or `elu`.
+        Options are limited to `tanh`, `relu` (default), `leaky_relu` or `elu`.
 
-    activation2: str, default `relu`
+    activation2 : str
         Name of the activation function between first and second hidden layers.
-        Same options allowed as in the first activation.
+        Options are limited to `tanh`, `relu` (default), `leaky_relu` or `elu`.
 
-    validation_size: float, default 0.2 (20 % of data)
+    validation_size : float
         Defines size of the validation data set, separate from the training data.
-        During training the cost function will be evaluated with validation data
-        if this attribute value is larger than zero. `fit` method has a parameter
-        `use_validation` that determines whether validation is used at all. Thus,
-        setting it to False overrides this validation size.
+        Default size is 0.2 (20 % of the data). During training the cost function
+        will be evaluated with validation data if this attribute value is larger
+        than zero. `fit` method has a parameter `use_validation` that determines
+        whether validation is used at all. Thus, setting it to False overrides
+        this validation size (becomes effectively zero).
 
-    verbose_level: str, default `high`
-        Amount of logging entries. Possible options `high`, `mid` and `low`.
-        Default value is `high` which logs data for each training epoch.
-
-    seed: int, default None
-        Initial random seed value.
+    Other parameters
+    ----------------
+    **kwargs : dict
+        Keyword argument `verbose_level` can be used to control the amount of logging
+        entries. Possible options are `high`, `mid` and `low`. Default is `high`
+        which logs data for each training epoch. Other argument `seed` can be used
+        to init random seed value. None by default.
 
     Examples
     --------
-    Example for classification task with synthetic data. 20 % of the data will be used
-    for validation and thus the batch size value 50 means that there will be 8
+    Consider a classification task with synthetic data. 20 % of the data is
+    used for validation and thus the batch size 50 means that there will be 8
     iterations for every epoch.
 
     >>> import numpy as np
@@ -120,26 +111,37 @@ class ANN:
     allowed_hidden_activations = ("tanh", "relu", "leaky_relu", "elu")
 
     def __init__(
-        self, hidden_nodes: Tuple[int, int] = (50, 50), method: str = "class", **kwargs
+        self,
+        hidden_nodes: Tuple[int, int] = (50, 50),
+        method: str = "class",
+        optimizer: str = "sgd",
+        decay_rate: float = 0,
+        learning_rate: float = 0.1,
+        lambda_: float = 0,
+        early_stop_threshold: float = math.inf,
+        activation1: str = "relu",
+        activation2: str = "relu",
+        validation_size: float = 0.2,
+        **kwargs,
     ) -> None:
         self.hidden_nodes = hidden_nodes
         self.method = method
 
-        self._optimizer = str(kwargs.get("optimizer", "sgd"))
+        self._optimizer = str(optimizer)
         if self._optimizer not in self.allowed_optimizers:
             raise ValueError(f"`optimizer` must be one of {', '.join(self.allowed_optimizers)}")
 
-        self._decay_rate = max(float(kwargs.get("decay_rate", 0)), 0.0)
-        self._learning_rate = max(float(kwargs.get("learning_rate", 0.1)), 0.0)
+        self._decay_rate = max(float(decay_rate), 0.0)
+        self._learning_rate = max(float(learning_rate), 0.0)
         if self._decay_rate > 0:
             self._learning_rate = 1.0
 
-        self._lambda = max(float(kwargs.get("lambda_", 0)), 0.0)
-        self._early_stop_thres = float(kwargs.get("early_stop_threshold", math.inf))
+        self._lambda = max(float(lambda_), 0.0)
+        self._early_stop_thres = float(early_stop_threshold)
         self._stopping_epoch = None
 
-        self._afunc1 = kwargs.get("activation1", "relu")
-        self._afunc2 = kwargs.get("activation2", "relu")
+        self._afunc1 = str(activation1)
+        self._afunc2 = str(activation2)
         self._afunc3 = "softmax" if self.method == "class" else "identity"
 
         self._afn1, self._dafn1 = self._set_afunc("hidden", self._afunc1)
@@ -154,7 +156,7 @@ class ANN:
 
         self._train_stats = {"cost": np.nan, "acc": np.nan}
 
-        val_size = float(kwargs.get("validation_size", 0.2))
+        val_size = float(validation_size)
         if not (val_size > 0 and val_size < 1):
             raise ValueError("`validation_size` must be within (0,1)")
 
@@ -628,36 +630,50 @@ class ANN:
             logger.info(f"valid cost: {self._val_stats['cost'][epoch - 1]:.3f}")
             logger.info(f"valid acc: {self._val_stats['acc'][epoch - 1]:.3f}")
 
-    def fit(self, X: np.ndarray, y: np.ndarray, epochs: int = 100, **kwargs) -> None:
+    def fit(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+        epochs: int = 100,
+        batch_size: Optional[int] = None,
+        use_validation: bool = True,
+        **kwargs,
+    ) -> None:
         """Fit the neural network.
 
         Epoch is one total pass of all the training data, batch size determines the count of
         training data in one pass. For n observations (X.shape[0]), there are ceil(n / batch_size)
         iterations in one total pass.
 
-        Params
-        ------
-        X: NumPy array
+        Parameters
+        ----------
+        X : NumPy array
             Numerical data matrix of shape n x p, n observations and p attributes.
 
-        y: NumPy array
+        y : NumPy array
             Dependent variable with numerical or categorical values of shape n x 1.
 
-        epochs: int
+        epochs : int
             Count of total feedforward/backpropagation passes through the network.
+            Default value is 100.
 
-        Kwargs
-        ------
-        batch_size: int
-            Count of training data in one pass, by default X.shape[0]. For batch size k (k <= X.shape[0]),
-            there will be ceil(X.shape[0] / k) iterations in one epoch. Smallest allowed batch size is one.
+        batch_size : Optional[int]
+            Count of training data in one pass, default count is X.shape[0]. This is
+            set when the argument is given as None. For batch size k (k <= X.shape[0]),
+            there will be ceil(X.shape[0] / k) iterations in one epoch. Smallest
+            allowed batch size is one.
 
-        use_validation: bool
-            True if a separate validation data should be created, False otherwise. True by default.
+        use_validation : bool
+            Default value True means that a separate validation data is created
+            from X and y. In this case the attribute `validation_size` determines
+            the size of validation which is 20 % by default.
 
-        weights_save_path: str
-            Save path for best weights/biases in terms of minimizing the cost function, by default the current
-            working directory (cwd) and with file name `weights.h5`.
+        Other parameters
+        ----------------
+        **kwargs : dict
+            Keyword argument `weights_save_path` may define a custom save path for
+            the best weights/biases (in terms of minimizing the cost function).
+            Default is the current working directory and file `weights.h5`.
         """
         if len(X.shape) != 2:
             raise ValueError("Give array `X` as n x p, NumPy's .reshape(1, -1) might be helpful")
@@ -666,7 +682,7 @@ class ANN:
         if X.shape[0] != y.shape[0]:
             raise ValueError("Dimension mismatch for arrays, must be X.shape[0] == y.shape[0]")
 
-        self._use_valid = bool(kwargs.get("use_validation", True))
+        self._use_valid = bool(use_validation)
         self._epochs = epochs
         self._weights_save_path = str(kwargs.get("weights_save_path", os.getcwd()))
 
@@ -681,7 +697,11 @@ class ANN:
             self._val_stats["cost"], self._val_stats["acc"] = np.zeros(epochs), np.zeros(epochs)
             val_cost_min = np.inf
 
-        self._batch_size = max(min(int(kwargs.get("batch_size", X.shape[0])), X.shape[0]), 1)
+        if batch_size:
+            self._batch_size = max(min(int(batch_size), X.shape[0]), 1)
+        else:
+            self._batch_size = X.shape[0]
+
         x_indices = np.arange(X.shape[0])
 
         idx_ranges = self._generate_index_ranges(X.shape[0], self._batch_size)
@@ -767,12 +787,12 @@ class ANN:
         This means that either both test y and pred y are in inverse format
         or in their original format (whatever it is, numbers, chars etc.).
 
-        Params
-        ------
-        X: NumPy array
+        Parameters
+        ----------
+        X : NumPy array
             Numerical data matrix of shape n x p, n observations and p attributes.
 
-        weights_path: str
+        weights_path : str
             File path for pre-trained weights, otherwise currently available weights.
             These is likely needed if one wants to use optimal weights after fitting.
 
@@ -853,10 +873,10 @@ class ANN:
         Cost and accuracy are plotted for training data, and
         also for validation if possible (validation was used).
 
-        Params
-        ------
-        figsize: tuple, two int values
-            Width, height in inches.
+        Parameters
+        ----------
+        figsize : Tuple[int, int]
+            Width and height in inches. Default values are 10 and 6.
         """
         if not isinstance(self._train_stats["cost"], np.ndarray):
             raise ValueError("Nothing to plot yet, train the model first")

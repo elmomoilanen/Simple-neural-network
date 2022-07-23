@@ -1,4 +1,4 @@
-"""Implements activation function candidates."""
+"""Implements activation functions."""
 import numpy as np
 
 
