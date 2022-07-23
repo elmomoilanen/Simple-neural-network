@@ -4,7 +4,7 @@ Package contains four modules in total.
 
 1) activations
     Contains implementations for activation functions, e.g. tanh and relu.
-    
+
 2) evolution
     Contains implementation for Evolution class.
 

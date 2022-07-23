@@ -85,3 +85,13 @@ evo.fit(X, y.reshape(-1, 1), "classification")
 ```
 
 where the result of *fit* method call will be a list of parameter combinations of size 20 where the first combination is the most fittest (had lowest cost function value). This combination can be passed for a new ANN object or further narrow down search region of the hyperparameter space.
+
+## Docs ##
+
+Render the documentation as HTML with the following command
+
+```bash
+sphinx-build -b html docs/source/ docs/build/html
+```
+
+and open the starting page docs/build/html/index.html in a browser.
