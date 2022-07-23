@@ -6,7 +6,7 @@ Library that implements a simple two hidden layer artificial neural network with
 
 ## Install ## 
 
-File *pyproject.toml* lists the dependencies. Installation is recommended to do via Poetry (a package and dependency manager for Python) but of course other options are possible as long as the libraries listed in *tool.poetry.dependencies* are installed.
+File *pyproject.toml* lists the dependencies. Installation is recommended to do with Poetry (a package and dependency manager for Python) but other options are also possible as long as the libraries listed in *tool.poetry.dependencies* are installed.
 
 With Poetry, after cloning and navigating to the target folder, run the following command in a shell
 
@@ -14,7 +14,9 @@ With Poetry, after cloning and navigating to the target folder, run the followin
 poetry install --no-dev
 ```
 
-which creates a virtual environment for the library and installs required non-development dependencies (NumPy etc.) inside it. Virtual environment setup is controlled by the *poetry.toml* file. As the *--no-dev* option skips installation of the dev dependencies, don't include it in the command above if e.g. want to be able to run the unit tests (pytest is needed for that).
+which creates a virtual environment for the library and installs required non-development dependencies (NumPy etc.) inside it. Virtual environment setup is controlled by the *poetry.toml* file. As the *--no-dev* option skips installation of the development dependencies, don't include it in the command above if e.g. want to be able to run the unit tests (pytest is needed for that).
+
+For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
 ## Use ##
 
@@ -22,20 +24,34 @@ Module *neural_network* contains class *ANN* which implements the two hidden lay
 
 The following example illustrates the usage of this library.
 
-Consider a typical supervised learning task where the aim is to learn a function **f** between provided example input-output (X-y) pairs such that the learned function would also generalize well for unseen data. Assume that X is a numerical data matrix of shape n x p (n observations, p attributes) and y is an array of labels of size n. As the dependent variable y contains labels, the function **f** classifies each *x_i* from the input space to the output space.
+Start a new Python shell e.g. as follows
+
+```bash
+MPLBACKEND= poetry run python
+```
+
+with a proper backend (e.g. macosx or qt5agg) after the equal sign. If the backend has been set correctly earlier, just drop this setting.
+
+Consider now a typical supervised learning task where the aim is to learn a function **f** between provided example input-output (X-y) pairs such that the learned function would also generalize well for unseen data. Assume that X is a numerical data matrix of shape n x p (n observations, p attributes) and y is an array of labels of size n. As the dependent variable y contains labels, the function **f** classifies each *x_i* from the input space to the output space.
 
 Following code imports the ANN class from the neural_network module and fits a model (i.e., learns a function **f**) for the example X-y pairs. We notice that in order to run the model fitting (ann.fit), a certain set of hyperparameters must be set in advance. This can be done manually or automated by an additional hyperparameter optimization step. More on this latter option later.
 
 ```python
 from simple_neural_network.neural_network import ANN
 
-ann = ANN(hidden_nodes=(40, 15), learning_rate=1.0, activation1="tanh", early_stop_threshold=50)
+ann = ANN(
+    hidden_nodes=(40, 15),
+    learning_rate=1.0,
+    activation1="tanh",
+    early_stop_threshold=50,
+)
+
 ann.fit(X, y.reshape(-1, 1), epochs=500, batch_size=50)
 
-# fit done, get a summary of the process
+# Fit done, get a summary of the process
 ann.get_fit_results()
 
-# plot cost and accuracy data of the fitting
+# Plot cost and accuracy data of the fitting process
 ann.plot_fit_results()
 ```
 
@@ -48,7 +64,7 @@ If for some reason we got also y_new (true labels for X_new), we can evaluate th
 ```python
 y_new_pred = ann.predict(X_new)
 
-# import the confusion matrix to evaluate prediction performance
+# Import the confusion matrix to evaluate prediction performance
 from simple_neural_network.metrics import confusion_matrix
 
 conf_matrix = confusion_matrix(y_true=y_new, y_pred=y_new_pred)
