@@ -1,7 +1,7 @@
 """Implements an evolution algorithm to search an optimal hyperparameter combination.
 
-Target is to find globally optimal combination but obviously it's not guaranteed that
-such solution can be found with this algorithm or the initial setup of parameters.
+The goal is to find a globally optimal combination but obviously it's not guaranteed
+that such solution can be found with this algorithm or the initial setup of parameters.
 
 Strategy is the follows:
 
@@ -46,10 +46,10 @@ class Evolution:
 
     Other parameters
     ----------------
-    **kwargs : dict
-        Keyword arguments `neurons`, `learning_rates` and `lambdas` are
-        used if given as tuples. If not given, reasonable default values
-        are used instead.
+    **kwargs : Iterable[Union[float, int]]
+        Keyword arguments `neurons`, `learning_rates` and `lambdas` are accepted and used.
+        Their values must be iterables with either float or int items. If any of the
+        mentioned arguments is not given, then default values will be used instead.
 
     Examples
     --------
@@ -334,13 +334,15 @@ class Evolution:
 
             for iter, param_set in enumerate(population):
                 logger.info(f"hyperparameter set {iter+1}/{len(population)}")
+                # ANN cannot handle argument "fitness"
+                param_set.pop("fitness", None)
+
                 ann = ANN(
                     **param_set,
                     method=method_type,
                     early_stop_threshold=early_stop_thres,
                     verbose_level="mid",
                 )
-
                 ann.fit(
                     x_train,
                     y_train,
@@ -349,7 +351,6 @@ class Evolution:
                     weights_save_path=weights_save_path,
                     use_validation=use_validation,
                 )
-
                 try:
                     y_pred = ann.predict(x_test, weights_path=weights_save_path)
                 except FileNotFoundError as err:

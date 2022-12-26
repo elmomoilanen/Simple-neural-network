@@ -129,7 +129,7 @@ def test_init_obj_object_with_all_attributes():
         activation2="elu",
         validation_size=0.99,
         verbose_level="mid",
-        seed=12345,
+        random_seed=12345,
     )
 
     assert ann.hidden_nodes[1] == 1

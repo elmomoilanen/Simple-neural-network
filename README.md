@@ -6,15 +6,15 @@ Library that implements a simple two hidden layer artificial neural network with
 
 ## Install ## 
 
-File *pyproject.toml* lists the dependencies. Installation is recommended to do with Poetry (a package and dependency manager for Python) but other options are also possible as long as the libraries listed in *tool.poetry.dependencies* are installed.
+Poetry is the recommended tool for installation and the following short guide uses it.
 
-With Poetry, after cloning and navigating to the target folder, run the following command in a shell
+After cloning and navigating to the target folder, running the following command creates a virtual environment within this project directory and installs non-development dependencies inside it
 
 ```bash
-poetry install --no-dev
+poetry install --without dev
 ```
 
-which creates a virtual environment for the library and installs required non-development dependencies (NumPy etc.) inside it. Virtual environment setup is controlled by the *poetry.toml* file. As the *--no-dev* option skips installation of the development dependencies, don't include it in the command above if e.g. want to be able to run the unit tests (pytest is needed for that).
+In-project virtual environment setup is controlled in *poetry.toml*. As the *--without dev* option skips installation of the development dependencies, do not include it in the command above if e.g. you want to be able to run the unit tests (pytest is needed for that).
 
 For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
@@ -24,7 +24,7 @@ Module *neural_network* contains class *ANN* which implements the two hidden lay
 
 The following example illustrates the usage of this library.
 
-Start a new Python shell e.g. as follows
+Start a new Python shell within the virtual environment e.g. as follows
 
 ```bash
 MPLBACKEND= poetry run python
@@ -87,6 +87,8 @@ evo.fit(X, y.reshape(-1, 1), "classification")
 where the result of *fit* method call will be a list of parameter combinations of size 20 where the first combination is the most fittest (had lowest cost function value). This combination can be passed for a new ANN object or further narrow down search region of the hyperparameter space.
 
 ## Docs ##
+
+Make sure that you included the *docs* dependency group in the installation step.
 
 Render the documentation as HTML with the following command
 

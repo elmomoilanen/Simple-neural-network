@@ -83,13 +83,12 @@ class ANN:
         whether validation is used at all. Thus, setting it to False overrides
         this validation size (becomes effectively zero).
 
-    Other parameters
-    ----------------
-    **kwargs : dict
-        Keyword argument `verbose_level` can be used to control the amount of logging
-        entries. Possible options are `high`, `mid` and `low`. Default is `high`
-        which logs data for each training epoch. Other argument `seed` can be used
-        to init random seed value. None by default.
+    verbose_level : str
+        Control amount of logging entries. Accepted values are "high", "mid" and "low".
+        Default is "low" which will log every 50th epoch during the fitting process.
+
+    random_seed: Optional[int]
+        Seed used to initialize random number generator. Defaults to None.
 
     Examples
     --------
@@ -122,7 +121,8 @@ class ANN:
         activation1: str = "relu",
         activation2: str = "relu",
         validation_size: float = 0.2,
-        **kwargs,
+        verbose_level: str = "low",
+        random_seed: Optional[int] = None,
     ) -> None:
         self.hidden_nodes = hidden_nodes
         self.method = method
@@ -178,10 +178,8 @@ class ANN:
         self._mom_beta1 = 0.9
         self._mom_beta2 = 0.999
 
-        self._verbose_level = str(kwargs.get("verbose_level", "high"))
-
-        seed = kwargs.get("seed", None)
-        self._rng = np.random.default_rng(seed=seed)
+        self._verbose_level = verbose_level
+        self._rng = np.random.default_rng(seed=random_seed)
 
     def __repr__(self):
         return (
@@ -486,7 +484,7 @@ class ANN:
                 self._s_b["b3"] * self._mom_beta2 + (1.0 - self._mom_beta2) * b3_grad * b3_grad
             )
 
-            exp = epoch if epoch > 0 else 1
+            exp = max(epoch, 1)
 
             mom_w3_new = self._mom_w["w3"] / (1.0 - self._mom_beta1**exp)
             mom_b3_new = self._mom_b["b3"] / (1.0 - self._mom_beta1**exp)
@@ -531,7 +529,7 @@ class ANN:
                 self._s_b["b2"] * self._mom_beta2 + (1.0 - self._mom_beta2) * b2_grad * b2_grad
             )
 
-            exp = epoch if epoch > 0 else 1
+            exp = max(epoch, 1)
 
             mom_w2_new = self._mom_w["w2"] / (1.0 - self._mom_beta1**exp)
             mom_b2_new = self._mom_b["b2"] / (1.0 - self._mom_beta1**exp)
@@ -576,7 +574,7 @@ class ANN:
                 self._s_b["b1"] * self._mom_beta2 + (1.0 - self._mom_beta2) * b1_grad * b1_grad
             )
 
-            exp = epoch if epoch > 0 else 1
+            exp = max(epoch, 1)
 
             mom_w1_new = self._mom_w["w1"] / (1.0 - self._mom_beta1**exp)
             mom_b1_new = self._mom_b["b1"] / (1.0 - self._mom_beta1**exp)
@@ -670,7 +668,7 @@ class ANN:
 
         Other parameters
         ----------------
-        **kwargs : dict
+        **kwargs : str
             Keyword argument `weights_save_path` may define a custom save path for
             the best weights/biases (in terms of minimizing the cost function).
             Default is the current working directory and file `weights.h5`.

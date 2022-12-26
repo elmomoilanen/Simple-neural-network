@@ -1,19 +1,14 @@
 """Quick guide to simple neural network package.
 
-Package contains four modules in total.
+Package contains the following modules
+- activations
+- evolution
+- metrics
+- neural_network
 
-1) activations
-    Contains implementations for activation functions, e.g. tanh and relu.
-
-2) evolution
-    Contains implementation for Evolution class.
-
-3) metrics
-    Contains metrics to evaluate performance of neural networks.
-
-4) neural_network
-    Contain implementation for ANN class which has the core functionality
-    of this package.
+`ANN` class from the `neural_network` module implements the main functionality
+of this package and can be interacted via its primary public interfaces `fit`
+and `predict`.
 """
 __version__ = "1.0.0"
 
