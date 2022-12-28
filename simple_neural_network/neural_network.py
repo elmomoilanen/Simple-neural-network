@@ -97,7 +97,7 @@ class ANN:
     iterations for every epoch.
 
     >>> import numpy as np
-    >>> from simple_neural_network.neural_network import ANN
+    >>> from simple_neural_network import ANN
     >>> rg = np.random.default_rng()
     >>> X = rg.normal(size=(500, 2))
     >>> y = np.argmax(0.4 * np.sin(X) + 0.6 * np.cos(X) + 0.1, axis=1)
@@ -167,6 +167,7 @@ class ANN:
         self._iters = np.nan
 
         self._weights_save_path = None
+        self._weights_save_epoch = None
         self._use_valid = None
 
         self._mom_w = {"w1": np.nan, "w2": np.nan, "w3": np.nan}
@@ -441,9 +442,9 @@ class ANN:
         With these formulas, the errors are propagated backwards and avoid
         duplicate multiplications. Hence the algorithm name backpropagation.
 
-        At the end, weights must be updated and this really depends on the algorithm
-        which can be e.g. the standard stochastic gradient descent or Adam. See the
-        _update_w methods for further information.
+        At the end, weights must be updated and this really depends on the
+        algorithm which can be e.g. the standard stochastic gradient descent
+        or Adam. See the _update_w methods for further information.
         """
         delta3 = self._eval_dcost(y_inv, y_pred) * self._dafn3(self._z["z3"])
         self._update_w3(delta3, epoch)
@@ -639,9 +640,9 @@ class ANN:
     ) -> None:
         """Fit the neural network.
 
-        Epoch is one total pass of all the training data, batch size determines the count of
-        training data in one pass. For n observations (X.shape[0]), there are ceil(n / batch_size)
-        iterations in one total pass.
+        Epoch is one total pass of all the training data, batch size determines
+        the amount of training data for one pass. For n observations (X.shape[0]),
+        there are ceil(n / batch_size) iterations in one total pass.
 
         Parameters
         ----------
@@ -656,10 +657,10 @@ class ANN:
             Default value is 100.
 
         batch_size : Optional[int]
-            Count of training data in one pass, default count is X.shape[0]. This is
-            set when the argument is given as None. For batch size k (k <= X.shape[0]),
-            there will be ceil(X.shape[0] / k) iterations in one epoch. Smallest
-            allowed batch size is one.
+            Count of training data in single pass, the default count is X.shape[0].
+            Default is used when the argument is given as None. For batch size k
+            (k <= X.shape[0]), there will be ceil(X.shape[0] / k) iterations in
+            single epoch. The smallest allowed batch size is one.
 
         use_validation : bool
             Default value True means that a separate validation data is created
@@ -679,6 +680,8 @@ class ANN:
             raise ValueError("Give array `y` as n x 1, NumPy's .reshape(-1, 1) might be helpful")
         if X.shape[0] != y.shape[0]:
             raise ValueError("Dimension mismatch for arrays, must be X.shape[0] == y.shape[0]")
+        if epochs < 1:
+            raise ValueError("Epochs count must be at least 1")
 
         self._use_valid = bool(use_validation)
         self._epochs = epochs
@@ -691,7 +694,6 @@ class ANN:
             val_mask = self._get_val_indices(X.shape[0])
             X, X_val = X[~val_mask], X[val_mask]
             y, y_val = y[~val_mask], y[val_mask]
-
             self._val_stats["cost"], self._val_stats["acc"] = np.zeros(epochs), np.zeros(epochs)
             val_cost_min = np.inf
 
@@ -708,13 +710,11 @@ class ANN:
         if self.method == "class":
             y, y_inv = self._transform_y(y, x_type=X.dtype)
             out_node_count = y.shape[0]
-
             if self._use_valid:
                 y_val, y_val_inv = self._transform_y(y_val, x_type=X_val.dtype)
         else:
             out_node_count = 1
             y_inv = y
-
             if self._use_valid:
                 y_val_inv = y_val
 
@@ -723,7 +723,7 @@ class ANN:
         no_upgrade_counter = 0
         start_timestamp = time.perf_counter()
 
-        logger.info(f"begin training, doing {self._iters} iterations for {self._epochs} epochs")
+        logger.info(f"begin training, do {self._iters} iterations for every {self._epochs} epochs")
 
         for epoch in range(1, self._epochs + 1):
             epoch_rows = self._rng.choice(x_indices, size=len(x_indices), replace=False)
@@ -754,26 +754,31 @@ class ANN:
                 if self._val_stats["cost"][epoch - 1] < val_cost_min:
                     val_cost_min = self._val_stats["cost"][epoch - 1]
                     self._save_weights()
+                    self._weights_save_epoch = epoch
                     no_upgrade_counter = 0
                 else:
                     no_upgrade_counter += 1
                     if no_upgrade_counter >= self._early_stop_thres:
                         logger.info(
-                            f"early stop threshold {self._early_stop_thres} reached, stop training"
+                            f"early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
                         )
                         break
             else:
                 if self._train_stats["cost"][epoch - 1] < train_cost_min:
                     train_cost_min = self._train_stats["cost"][epoch - 1]
                     self._save_weights()
+                    self._weights_save_epoch = epoch
                     no_upgrade_counter = 0
                 else:
                     no_upgrade_counter += 1
                     if no_upgrade_counter >= self._early_stop_thres:
                         logger.info(
-                            f"early stop threshold {self._early_stop_thres} reached, stop training"
+                            f"early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
                         )
                         break
+
+        if self._weights_save_epoch and self._weights_save_epoch > 0:
+            logger.info(f"weights last saved at epoch {self._weights_save_epoch}")
 
         self._stopping_epoch = epoch
 
@@ -792,7 +797,7 @@ class ANN:
 
         weights_path : str
             File path for pre-trained weights, otherwise currently available weights.
-            These is likely needed if one wants to use optimal weights after fitting.
+            These are likely needed if one wants to use optimal weights after fitting.
 
         Returns
         -------
@@ -829,9 +834,10 @@ class ANN:
         -------
         dict
             Has always first-level keys `epochs` and `train_data`. If validation data
-            was used during fitting, a key `validation_data` is also included. Both
-            keys with "_data" suffix provide access to dicts with keys `smallest_cost`,
-            `smallest_cost_epoch`, `best_acc` and `best_acc_epoch`.
+            was used during fitting, a key `validation_data` is also included. Also,
+            key `weights_last_saved_epoch` should be available as a first-level key.
+            Both keys with "_data" suffix provide access to dicts with keys
+            `smallest_cost`, `smallest_cost_epoch`, `best_acc` and `best_acc_epoch`.
         """
         if not isinstance(self._train_stats["cost"], np.ndarray):
             raise ValueError("Nothing to return yet, train the model first")
@@ -844,12 +850,15 @@ class ANN:
         results = {
             "epochs": train_filt_cost.shape[0],
             "train_data": {
-                "smallest_cost": np.min(train_filt_cost),
-                "smallest_cost_epoch": np.argmin(train_filt_cost),
-                "best_acc": np.max(train_filt_acc),
-                "best_acc_epoch": np.argmax(train_filt_acc),
+                "smallest_cost": round(np.min(train_filt_cost), 4),
+                "smallest_cost_epoch": np.argmin(train_filt_cost) + 1,
+                "best_acc": round(np.max(train_filt_acc), 4),
+                "best_acc_epoch": np.argmax(train_filt_acc) + 1,
             },
         }
+
+        if self._weights_save_epoch:
+            results["weights_last_saved_epoch"] = self._weights_save_epoch
 
         if isinstance(self._val_stats["cost"], np.ndarray) and len(self._val_stats["cost"]) > 0:
             val_cost, val_acc = self._val_stats["cost"], self._val_stats["acc"]
@@ -857,10 +866,10 @@ class ANN:
             val_filt_acc = val_acc[val_acc > 0]
 
             results["validation_data"] = {
-                "smallest_cost": np.min(val_filt_cost),
-                "smallest_cost_epoch": np.argmin(val_filt_cost),
-                "best_acc": np.max(val_filt_acc),
-                "best_acc_epoch": np.argmax(val_filt_acc),
+                "smallest_cost": round(np.min(val_filt_cost), 4),
+                "smallest_cost_epoch": np.argmin(val_filt_cost) + 1,
+                "best_acc": round(np.max(val_filt_acc), 4),
+                "best_acc_epoch": np.argmax(val_filt_acc) + 1,
             }
 
         return results

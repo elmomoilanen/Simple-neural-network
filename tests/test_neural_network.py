@@ -176,6 +176,21 @@ def test_generate_index_ranges():
     )
 
 
+def test_generate_one_index_range():
+    train_size, batch_size = 500, 500
+    ranges = ANN._generate_index_ranges(train_size, batch_size)
+
+    total_range_count = 1
+    correct_ranges = [(0, train_size)]
+
+    assert len(ranges) == total_range_count
+
+    assert all(
+        range.start == corr_range[0] and range.stop == corr_range[1]
+        for range, corr_range in zip(ranges, correct_ranges)
+    )
+
+
 def test_transforming_y():
     x_type = np.array([1.0]).dtype
     y = np.array(["A", "B", "B", "C", "A"])
@@ -319,6 +334,7 @@ def test_eval_cost_with_regularization():
     assert isclose(ANN._cross_entropy(y_inv, y_pred), cost_without_pen, abs_tol=0.01)
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_fitting_basic_class_model():
     ann = ANN((3, 3), "class", verbose_level="low")
 
@@ -354,6 +370,7 @@ def test_fitting_basic_class_model():
     len(ann._train_stats["acc"]) == epochs
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_fitting_custom_class_model():
     ann = ANN(
         (3, 3),
@@ -398,6 +415,7 @@ def test_fitting_custom_class_model():
     len(ann._train_stats["acc"]) == epochs
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_fitting_reg_model():
     ann = ANN((3, 3), "reg", verbose_level="low")
 
@@ -474,6 +492,7 @@ def test_predict_file_not_found():
         ann.predict(x, weights_path=file_path)
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_get_fit_results():
     ann = ANN((3, 3), "reg", verbose_level="low")
 
@@ -496,7 +515,7 @@ def test_get_fit_results():
 
     results = ann.get_fit_results()
     # validation wasn't used
-    mandatory_keys = ("epochs", "train_data")
+    mandatory_keys = ("epochs", "train_data", "weights_last_saved_epoch")
     nested_keys = ("smallest_cost", "smallest_cost_epoch", "best_acc", "best_acc_epoch")
 
     assert isinstance(results, dict)

@@ -23,7 +23,7 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     NumPy array
         Rows represent the true labels with zero-based indexing and columns
         corresponding predicted labels. E.g. entry [0, 1] represents the case where the
-        true label is zero and predicted one. Thus, diagonal entries indicates the
+        true label is zero and predicted one. Thus, diagonal entries indicate the
         correctly predicted counts.
     """
     if not (y_true.ndim == 1 and y_pred.ndim == 1):

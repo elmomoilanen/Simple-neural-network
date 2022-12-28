@@ -47,7 +47,7 @@ class Evolution:
     Other parameters
     ----------------
     **kwargs : Iterable[Union[float, int]]
-        Keyword arguments `neurons`, `learning_rates` and `lambdas` are accepted and used.
+        Keyword arguments `neurons`, `learning_rates` and `lambdas` are accepted.
         Their values must be iterables with either float or int items. If any of the
         mentioned arguments is not given, then default values will be used instead.
 
@@ -245,7 +245,7 @@ class Evolution:
 
         Returns
         -------
-        Tuple : Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]
+        Tuple : Tuple[Tuple[np.ndarray, np.ndarray], ...]
             First of the tuples contains x_train and y_train arrays (90 % or n-1 of the obs).
             Second and last of the tuples contains x_test and y_test (10 % or 1 obs of the data).
         """
@@ -314,6 +314,8 @@ class Evolution:
             raise ValueError("Give array `y` as n x 1, NumPy's .reshape(-1, 1) might be helpful")
         if X.shape[0] != y.shape[0]:
             raise ValueError("Dimension mismatch for arrays, must be X.shape[0] == y.shape[0]")
+        if epochs < 1:
+            raise ValueError("Epochs count must be at least 1")
 
         early_stop_thres = int(early_stop_threshold)
         epochs = int(epochs)
