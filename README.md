@@ -34,7 +34,7 @@ with a proper backend (e.g. macosx or qt5agg) after the equal sign. If the backe
 
 Consider now a typical supervised learning task where the goal is to learn a function **f** between provided example input-output (X-y) pairs such that the learned function would also generalize well for unseen data. Assume that X is a numerical data matrix of shape n x p (n observations, p attributes) and y is an array of labels of size n. As the dependent variable y contains labels, the function **f** classifies each x_i from the input space to the output space. Notice that this example and the synthetic data generation (skipped here) are also presented in the ANN's docstring.
 
-Following code imports the ANN class from the *simple_neural_network* package and fits a model (i.e., learns a function **f**) for the example X-y pairs. We notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step. More on this latter option later.
+Following code imports the ANN class from the *simple_neural_network* package and fits a model (i.e., learns a function **f**) for the example X-y pairs. We notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step but more on this latter option later. For the complete set of hyperparameter options, please check the ANN's docstring as there are a myriad of choices.
 
 ```python
 from simple_neural_network import ANN
@@ -68,7 +68,7 @@ Summary of the fitting process, obtained by calling the *get_fit_results* method
 }
 ```
 
-and the related fitting results plot
+and the related fitting results (cost and accuracy) plot
 
 ![](docs/ann_fit_results.png)
 
@@ -89,7 +89,7 @@ from simple_neural_network import confusion_matrix
 conf_matrix = confusion_matrix(y_true=y_new, y_pred=y_new_pred)
 ```
 
-Resulted confusion matrix could be in this example e.g. the follow (with 100 new observations in X_new)
+Resulted confusion matrix could be in this example e.g. the following (with 100 new observations in X_new)
 
 ```
 array([[41, 11],
