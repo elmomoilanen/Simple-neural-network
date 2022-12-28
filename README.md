@@ -50,20 +50,25 @@ ann = ANN(
 # Batch size b means ceil(X_train.shape[0]/b) iterations per epoch
 ann.fit(X, y.reshape(-1, 1), epochs=500, batch_size=50)
 
-# Fit done, get a summary of the process
+# Fit done, get a summary of the fitting results
 ann.get_fit_results()
 
-# Plot cost and accuracy data of the fitting process
+# Plot cost and accuracy
 ann.plot_fit_results()
 ```
 
 Summary of the fitting process, obtained by calling the *get_fit_results* method, could be e.g. the following
 
 ```
-{'epochs': 85, 'train_data': {'smallest_cost': 0.4202, 'smallest_cost_epoch': 31, 'best_acc': 0.8175, 'best_acc_epoch': 24}, 'weights_last_saved_epoch': 35, 'validation_data': {'smallest_cost': 0.3655, 'smallest_cost_epoch': 35, 'best_acc': 0.82, 'best_acc_epoch': 19}}
+{
+'epochs': 85,
+'train_data': {'smallest_cost': 0.4202, 'smallest_cost_epoch': 31, 'best_acc': 0.8175, 'best_acc_epoch': 24},
+'weights_last_saved_epoch': 35,
+'validation_data': {'smallest_cost': 0.3655, 'smallest_cost_epoch': 35, 'best_acc': 0.82, 'best_acc_epoch': 19}
+}
 ```
 
-and the related fit results plot
+and the related fitting results plot
 
 ![](docs/ann_fit_results.png)
 
