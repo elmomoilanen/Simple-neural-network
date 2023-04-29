@@ -13,14 +13,23 @@ numpy = "^1.23"
 matplotlib = "^3.6"
 h5py = "^3.6"
 
+[tool.poetry.group.dev]
+optional = true
+
 [tool.poetry.group.dev.dependencies]
-black = "^22.8"
+black = "^23.3"
 pytest = "^7.1"
-flake8 = "^5.0"
+flake8 = "^6.0"
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^5.0"
-sphinx-rtd-theme = "1.0.0"
+sphinx = "^6.1"
+sphinx-rtd-theme = "^1.0"
+
+[tool.poetry.group.examples]
+optional = true
+
+[tool.poetry.group.examples.dependencies]
+jupyter = "1.0.0"
 
 [tool.black]
 line-length = 100
@@ -30,6 +39,7 @@ exclude = '''
     \.git
   | \.venv
   | docs
+  | examples
 )/
 '''
 
