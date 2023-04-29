@@ -1,4 +1,4 @@
-"""Implements metrics to evaluate performance of neural networks."""
+"""Implements metrics to evaluate performance of a neural network model."""
 import numpy as np
 
 
@@ -7,7 +7,7 @@ def confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
 
     Use this metric only for classification type tasks.
 
-    Pass arrays in their original value labels (numerical, categorical) or
+    Pass arrays with their original value labels (numerical, categorical) or
     in their inverse format. E.g., the inverse of ["a", "b"] is [0, 1].
 
     Parameters
