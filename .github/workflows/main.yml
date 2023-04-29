@@ -38,7 +38,7 @@ jobs:
         
     - name: Install dependencies
       shell: bash
-      run: poetry install
+      run: poetry install --with dev
 
     - name: Check formatting
       run: poetry run black --check --quiet .
