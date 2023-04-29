@@ -332,10 +332,10 @@ class Evolution:
 
         for gener in range(1, self.generations + 1):
             logger.info("####################")
-            logger.info(f"evolution generation: {gener}/{self.generations}")
+            logger.info(f"Evolution generation: {gener}/{self.generations}")
 
             for iter, param_set in enumerate(population):
-                logger.info(f"hyperparameter set {iter+1}/{len(population)}")
+                logger.info(f"Hyperparameter set {iter+1}/{len(population)}")
                 # ANN cannot handle argument "fitness"
                 param_set.pop("fitness", None)
 
@@ -364,7 +364,7 @@ class Evolution:
                 param_set["fitness"] = eval_cost(
                     y_test.reshape(-1), y_pred.reshape(-1), method=method_type
                 )
-                logger.info(f"fitness value (cost) for test data: {param_set['fitness']:.2f}")
+                logger.info(f"Fitness value (cost) for test data: {param_set['fitness']:.2f}")
 
             self._remove_weights_file(weights_save_path)
             self._save_generation_fitness_score(gener - 1, population)
@@ -379,7 +379,7 @@ class Evolution:
             population = new_population
 
             elapsed_time = time.perf_counter() - start_timestamp
-            logger.info(f"elapsed time: {elapsed_time//60:.0f} m. {elapsed_time%60:.1f} s.")
+            logger.info(f"Elapsed time: {elapsed_time//60:.0f} m. {elapsed_time%60:.1f} s.")
 
         # should never land here
         return []

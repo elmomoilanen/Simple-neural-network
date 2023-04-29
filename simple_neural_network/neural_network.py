@@ -70,17 +70,22 @@ class ANN:
     activation1 : str
         Name of the activation function between inputs and first hidden layer.
         Options are limited to `tanh`, `relu` (default), `leaky_relu` or `elu`.
+        `tanh` is a sigmoidal function that outputs values between -1 and 1, while
+        `relu` is a rectified linear unit function that outputs values between 0
+        and infinity. `leaky_relu` is a variant of `relu` that allows a small positive
+        gradient even the unit is not active. `elu` is an exponential linear unit
+        function that is a smoother version of the other LU versions.
 
     activation2 : str
         Name of the activation function between first and second hidden layers.
         Options are limited to `tanh`, `relu` (default), `leaky_relu` or `elu`.
 
     validation_size : float
-        Defines size of the validation data set, separate from the training data.
-        Default size is 0.2 (20 % of the data). During training the cost function
-        will be evaluated with validation data if this attribute value is larger
-        than zero. `fit` method has a parameter `use_validation` that determines
-        whether validation is used at all. Thus, setting it to False overrides
+        Defines the proportion of data to use for validation. Default is 0.2, which
+        means that 20% of the input data will be used for validation. During training
+        the cost function will be evaluated with validation data if this attribute
+        value is larger than zero. `fit` method has a parameter `use_validation` that
+        determines whether validation is used at all. Thus, setting it to False overrides
         this validation size (becomes effectively zero).
 
     verbose_level : str
@@ -197,7 +202,7 @@ class ANN:
             raise TypeError("`hidden_nodes` must be a tuple of length two")
 
         if any(node <= 0 for node in nodes):
-            raise ValueError("node count cannot be under one")
+            raise ValueError("Node count cannot be under one")
 
         self._hidden_nodes = nodes
 
@@ -208,7 +213,7 @@ class ANN:
     @method.setter
     def method(self, method_type):
         if not isinstance(method_type, str):
-            raise TypeError("method must be a string")
+            raise TypeError("Method must be a string")
 
         method_type = method_type.lower()
 
@@ -620,14 +625,14 @@ class ANN:
 
             logger.info("####################")
             logger.info(
-                f"epoch: {epoch}/{self._epochs}, elapsed time: {elapsed_m:.0f} m. {elapsed_s:.2f} s."
+                f"Epoch: {epoch}/{self._epochs}, elapsed time: {elapsed_m:.0f} m. {elapsed_s:.2f} s."
             )
-            logger.info(f"train cost: {self._train_stats['cost'][epoch - 1]:.3f}")
-            logger.info(f"train acc: {self._train_stats['acc'][epoch - 1]:.3f}")
+            logger.info(f"Train cost: {self._train_stats['cost'][epoch - 1]:.3f}")
+            logger.info(f"Train acc: {self._train_stats['acc'][epoch - 1]:.3f}")
 
         elif log_type == "valid" and print_log:
-            logger.info(f"valid cost: {self._val_stats['cost'][epoch - 1]:.3f}")
-            logger.info(f"valid acc: {self._val_stats['acc'][epoch - 1]:.3f}")
+            logger.info(f"Valid cost: {self._val_stats['cost'][epoch - 1]:.3f}")
+            logger.info(f"Valid acc: {self._val_stats['acc'][epoch - 1]:.3f}")
 
     def fit(
         self,
@@ -665,7 +670,7 @@ class ANN:
         use_validation : bool
             Default value True means that a separate validation data is created
             from X and y. In this case the attribute `validation_size` determines
-            the size of validation which is 20 % by default.
+            the size of validation which is 20% by default.
 
         Other parameters
         ----------------
@@ -723,7 +728,7 @@ class ANN:
         no_upgrade_counter = 0
         start_timestamp = time.perf_counter()
 
-        logger.info(f"begin training, do {self._iters} iterations for every {self._epochs} epochs")
+        logger.info(f"Begin training, do {self._iters} iterations for every {self._epochs} epochs")
 
         for epoch in range(1, self._epochs + 1):
             epoch_rows = self._rng.choice(x_indices, size=len(x_indices), replace=False)
@@ -760,7 +765,7 @@ class ANN:
                     no_upgrade_counter += 1
                     if no_upgrade_counter >= self._early_stop_thres:
                         logger.info(
-                            f"early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
+                            f"Early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
                         )
                         break
             else:
@@ -773,12 +778,12 @@ class ANN:
                     no_upgrade_counter += 1
                     if no_upgrade_counter >= self._early_stop_thres:
                         logger.info(
-                            f"early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
+                            f"Early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
                         )
                         break
 
         if self._weights_save_epoch and self._weights_save_epoch > 0:
-            logger.info(f"weights last saved at epoch {self._weights_save_epoch}")
+            logger.info(f"Weights last saved at epoch {self._weights_save_epoch}")
 
         self._stopping_epoch = epoch
 
@@ -828,7 +833,7 @@ class ANN:
         return y_pred.reshape(-1)
 
     def get_fit_results(self) -> Dict[str, Union[float, int]]:
-        """Get a summary of fit results.
+        """Get a summary of the fit results.
 
         Returns
         -------
