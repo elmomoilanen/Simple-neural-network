@@ -6,15 +6,15 @@ Library that implements a simple two hidden layer artificial neural network with
 
 ## Install ## 
 
-Poetry is the recommended tool for installation and the following short guide uses it.
+Poetry is the recommended tool for installation.
 
-After cloning and navigating to the target folder, running the following command creates a virtual environment within this project directory and installs non-development dependencies inside it
+After cloning and navigating to the target folder, running the following command creates a virtual environment within this project directory and installs the default dependencies inside it
 
 ```bash
-poetry install --without dev
+poetry install
 ```
 
-In-project virtual environment setup is controlled in *poetry.toml*. As the *--without dev* option skips installation of the development dependencies, do not include it in the command above if e.g. you want to be able to run the unit tests (pytest is needed for that).
+In-project virtual environment setup is controlled by *poetry.toml*. Default dependencies are not enough e.g. to run the unit tests as the library pytest is required for that and it is only included in the optional `dev` dependency group which can be installed by adding `--with dev` to the above installation command.
 
 For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
@@ -116,8 +116,6 @@ evo.fit(X, y.reshape(-1, 1), "classification")
 where the result of the *fit* method call will be a list of parameter combinations of size 20 where the first combination is the most fittest (has the lowest cost function value). This combination can be passed for a new ANN object or to further narrow down search region of the hyperparameter space.
 
 ## Docs ##
-
-Make sure that you included the *docs* dependency group in the installation step.
 
 Render the documentation as HTML with the following command
 
