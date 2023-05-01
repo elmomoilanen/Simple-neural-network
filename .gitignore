@@ -10,4 +10,8 @@ poetry.lock
 
 *.h5
 
+.ipynb_checkpoints/
+examples/*
+!examples/classification.ipynb
+
 build
