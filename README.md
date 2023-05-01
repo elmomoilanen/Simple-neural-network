@@ -57,24 +57,7 @@ ann.get_fit_results()
 ann.plot_fit_results()
 ```
 
-Summary of the fitting process, obtained by calling the *get_fit_results* method, could be e.g. the following
-
-```
-{
-'epochs': 85,
-'train_data': {'smallest_cost': 0.4202, 'smallest_cost_epoch': 31, 'best_acc': 0.8175, 'best_acc_epoch': 24},
-'weights_last_saved_epoch': 35,
-'validation_data': {'smallest_cost': 0.3655, 'smallest_cost_epoch': 35, 'best_acc': 0.82, 'best_acc_epoch': 19}
-}
-```
-
-and the related fitting results (cost and accuracy) plot
-
-![](docs/ann_fit_results.png)
-
-which confirms visually that the cost was minimized around the 35th epoch and immediately afterwards fitting results started to deteriorate. As the neural network parameter *early_stop_threshold* was set to 50, the fitting process was terminated at epoch 85 after 50 consecutive failures to improve the cost score. Best model weights in terms of the cost score were saved after the epoch 35.
-
-Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). As it was already seen above, the optimal model weights are saved to a file, by default to the current working directory with name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes to the end.
+Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). To make this work during the learning process, the optimal model weights are saved to a file, by default to current working directory with the name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes up to the end.
 
 After the model has been fitted we might encounter new input data X_new for which we would like to get the predicted labels y_new. This can simply be done by calling the ANN's *predict* method, and either assuming that a previously created and fitted object is still in memory or in other case passing a file path for the pre-trained neural network weights. For now, we continue from the previous code snippet and reuse the best model weights saved in the file *weights.h5*.
 
@@ -89,20 +72,13 @@ from simple_neural_network import confusion_matrix
 conf_matrix = confusion_matrix(y_true=y_new, y_pred=y_new_pred)
 ```
 
-Resulted confusion matrix could be in this example e.g. the following (with 100 new observations in X_new)
+Rows of the confusion matrix represent the true labels with zero-based indexing and columns corresponding predicted labels. For example, in case of binary labels the confusion matrix is of size 2 x 2, and entry (0, 1) would represent the total count of predicted cases where the true label is zero but predicted one. Hence, entry (1, 0) represent total count of cases where the prediction was zero but true label one. Then of course, diagonal entries show the correctly predicted counts.
 
-```
-array([[41, 11],
-       [ 5, 43]])
-```
-
-Rows of the confusion matrix represent the true labels with zero-based indexing and columns corresponding predicted labels. For example, entry (0, 1) of the table (value 11) represents total count of predicted cases where the true label is zero but predicted one. Thus, diagonal entries indicate the correctly predicted counts.
-
-At the end of this example let's get back to the hyperparameter problem. Finding optimal or even good hyperparameters is a difficult task, one and maybe the most common possibility being just trying different combinations manually. As mentioned above, other option is to use an evolutionary algorithm and for the case of this library, the algorithm found in *evolution* module. This evolution algorithm can be seen as a bit enhanced version of the basic cross-validation approach that would likely take much more time to complete.
+Let's now get back to the hyperparameter problem. Finding optimal or even good hyperparameters is a difficult task, one and maybe the most common possibility being just trying different combinations manually. One option is to use an evolutionary algorithm that can be seen as a bit enhanced version of the basic cross-validation approach that would likely take much more time to complete.
 
 The evolution algorithm used here needs for start two parameters N and K that describe the population size (sets of hyperparameters) and number of generations (how long the algorithm will be run). At the start of the first generation, a population of size N is initialized. After that a fitness score (cost) is computed for every member of the population, the members are ordered by the score and top M (< N) and few P (< M) of the worst performers are selected to survive, for random members of the survivors some of their parameters are mutated and finally N-(M+P) new members are reproduced from the survived members making the population size again N. This process, starting from the fitness score computations, is repeated K times.
 
-This evolution algorithm can be used as follows (assume the same input-output data X-y that were used above)
+This evolution algorithm can be used as follows
 
 ```python
 from simple_neural_network import Evolution
@@ -113,7 +89,7 @@ evo = Evolution(generations=10, population_size=20)
 evo.fit(X, y.reshape(-1, 1), "classification")
 ```
 
-where the result of the *fit* method call will be a list of parameter combinations of size 20 where the first combination is the most fittest (has the lowest cost function value). This combination can be passed for a new ANN object or to further narrow down search region of the hyperparameter space.
+where result of the *fit* method call will be a list of 20 parameter combinations where the first combination is the most fittest (has the lowest cost function value). This combination can be passed for a new ANN object or used to further narrow down search region of the hyperparameter space.
 
 ## Docs ##
 
