@@ -392,7 +392,7 @@ class Evolution:
             population = new_population
 
             elapsed_time = time.perf_counter() - start_timestamp
-            logger.info(f"Elapsed time: {elapsed_time//60:.0f} m. {elapsed_time%60:.1f} s.")
+            logger.info(f"Elapsed time: {elapsed_time//60:.0f} m. {elapsed_time%60:.0f} s.")
 
         # should never land here
         return []

@@ -616,7 +616,7 @@ class ANN:
 
             logger.info("####################")
             logger.info(
-                f"Epoch: {epoch}/{self._epochs}, elapsed time: {elapsed_m:.0f} m. {elapsed_s:.2f} s."
+                f"Epoch: {epoch}/{self._epochs}, elapsed time: {elapsed_m:.0f} m. {elapsed_s:.0f} s."
             )
             logger.info(f"Train cost: {self._train_stats['cost'][epoch - 1]:.3f}")
             logger.info(f"Train acc: {self._train_stats['acc'][epoch - 1]:.3f}")
