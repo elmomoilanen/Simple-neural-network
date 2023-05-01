@@ -100,3 +100,19 @@ sphinx-build -b html docs/source/ docs/build/html
 ```
 
 and open the starting page docs/build/html/index.html in a browser.
+
+## Examples ##
+
+Folder *examples* contain a classification task example for the MNIST data (task is to classify handwritten digits). In order to be able run the code in the notebook, the data must be downloaded separately and the jupyter package must be installed and included in the current virtual environment.
+
+Following command does the Jupyter package installation (examples is now the required dependency group in pyproject.toml)
+
+```bash
+poetry install --with examples
+```
+
+and then fire up the notebook by
+
+```bash
+poetry run jupyter notebook
+```
