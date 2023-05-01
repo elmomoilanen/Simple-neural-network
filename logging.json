@@ -3,7 +3,7 @@
     "disable_existing_loggers": true,
     "formatters": {
         "basic_console": {
-            "format": "%(asctime)s %(name)s - %(message)s"
+            "format": "%(message)s"
         },
         "basic_file": {
             "format": "%(asctime)s %(name)s - %(levelname)s - %(message)s"

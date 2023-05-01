@@ -288,12 +288,23 @@ def test_cross_entropy_derivative():
 
     # y_pred must be 3 x 4
     y_pred = np.array([[0.25, 0.0, 0.7, 0.5], [0.5, 0.0, 0.15, 0.5], [0.25, 1.0, 0.15, 0.0]])
-    zero_mask = y_pred == 0.0
 
     dcross_entr = ANN._dcross_entropy(y_inv, y_pred)
     assert dcross_entr.shape == y_pred.shape
 
-    assert np.alltrue(dcross_entr[zero_mask] == 0.0)
+    assert np.alltrue(
+        np.isclose(
+            dcross_entr,
+            np.array(
+                [
+                    [-0.1875, 0.000, 0.175, 0.125],
+                    [0.125, -0.250, -0.2125, 0.125],
+                    [0.0625, 0.250, 0.0375, -0.250],
+                ]
+            ),
+            atol=0.001,
+        )
+    )
 
 
 def test_mse():

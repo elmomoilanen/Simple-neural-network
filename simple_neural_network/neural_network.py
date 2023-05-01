@@ -88,9 +88,11 @@ class ANN:
         determines whether validation is used at all. Thus, setting it to False overrides
         this validation size (becomes effectively zero).
 
-    verbose_level : str
-        Control amount of logging entries. Accepted values are "high", "mid" and "low".
-        Default is "low" which will log every 50th epoch during the fitting process.
+    verbose_level : Optional[str]
+        Controls the amount of logging entries. Accepted level names are "high",
+        "mid" and "low". Level None would suppress all logging. For level "high",
+        every epoch would be logged. Default level is "low" which logs every 50th
+        epoch during the fitting process.
 
     random_seed: Optional[int]
         Seed used to initialize random number generator. Defaults to None.
@@ -126,7 +128,7 @@ class ANN:
         activation1: str = "relu",
         activation2: str = "relu",
         validation_size: float = 0.2,
-        verbose_level: str = "low",
+        verbose_level: Optional[str] = "low",
         random_seed: Optional[int] = None,
     ) -> None:
         self.hidden_nodes = hidden_nodes
@@ -318,28 +320,19 @@ class ANN:
 
     @staticmethod
     def _cross_entropy(y_inv, y_pred):
-        # y_inv[i] is the correct y inv value for column i (and only value equal to one)
-        # filter out probabilities (y_pred values) for which y is zero
-        non_zero_y = y_pred[y_inv, np.arange(y_pred.shape[1])]
-        log_y = np.log(non_zero_y + 1e-9)
+        labels = y_inv.shape[0]
+        y_pred = np.clip(y_pred, 1e-12, 1.0 - 1e-12)
 
-        return max(-np.mean(log_y), 1e-20)
+        log_likelihood = -np.log(y_pred[y_inv, range(labels)])
+        return np.sum(log_likelihood) / labels
 
     @staticmethod
     def _dcross_entropy(y_inv, y_pred):
-        cols = np.arange(y_pred.shape[1])
+        labels = y_inv.shape[0]
+        dmatrix = y_pred
 
-        non_zero_y = y_pred[y_inv, cols]
-        non_zero_y_inv = np.zeros(non_zero_y.shape, dtype=non_zero_y.dtype)
-
-        pos_mask = non_zero_y > 0
-
-        if pos_mask.sum() > 0:
-            non_zero_y_inv[pos_mask] = -1.0 / non_zero_y[pos_mask]
-            non_zero_y_inv[pos_mask] /= y_inv.shape[0]
-
-        dmatrix = np.zeros_like(y_pred)
-        dmatrix[y_inv, cols] = non_zero_y_inv
+        dmatrix[y_inv, range(labels)] -= 1
+        dmatrix /= labels
 
         return dmatrix
 
@@ -348,7 +341,7 @@ class ANN:
         square_of_err = (y.T - y_pred) ** 2
         mse = np.mean(square_of_err) * 0.5
 
-        return max(mse, 1e-20)
+        return max(mse, 1e-12)
 
     @staticmethod
     def _dmse(y, y_pred):
@@ -387,9 +380,9 @@ class ANN:
         ss_resid = np.sum((y_inv.T - y_pred) ** 2)
 
         if ss_total < 1e-6:
-            return 1e-20
+            return 1e-15
 
-        return max(1.0 - (ss_resid / ss_total), 1e-20)
+        return max(1.0 - (ss_resid / ss_total), 1e-12)
 
     def _compute_predict(self, X):
         h1_pred = self._afn1(np.matmul(self._w["w1"], X.T) + self._b["b1"])
@@ -611,13 +604,11 @@ class ANN:
     def _log_status(self, epoch, elapsed_time, log_type="train"):
         print_log = False
 
-        if epoch == self._epochs:
+        if self._verbose_level == "high":
             print_log = True
-        elif self._verbose_level == "high":
+        elif self._verbose_level == "mid" and (epoch % 10 == 0 or epoch == self._epochs):
             print_log = True
-        elif self._verbose_level == "mid" and epoch % 10 == 0:
-            print_log = True
-        elif epoch % 50 == 0:
+        elif self._verbose_level == "low" and (epoch % 50 == 0 or epoch == self._epochs):
             print_log = True
 
         if log_type == "train" and print_log:
@@ -645,9 +636,10 @@ class ANN:
     ) -> None:
         """Fit the neural network.
 
-        Epoch is one total pass of all the training data, batch size determines
-        the amount of training data for one pass. For n observations (X.shape[0]),
-        there are ceil(n / batch_size) iterations in one total pass.
+        Epoch is one total pass of all the training data, which may consists of one
+        or more iterations. Batch size determines the amount of iterations for each epoch.
+        If the data X has n observations (i.e., X.shape[0]), there are ceil(n / batch_size)
+        iterations in one epoch.
 
         Parameters
         ----------
@@ -662,10 +654,11 @@ class ANN:
             Default value is 100.
 
         batch_size : Optional[int]
-            Count of training data in single pass, the default count is X.shape[0].
-            Default is used when the argument is given as None. For batch size k
-            (k <= X.shape[0]), there will be ceil(X.shape[0] / k) iterations in
-            single epoch. The smallest allowed batch size is one.
+            Amount of training data in one iteration, default size is X.shape[0] which
+            means that each epoch contains only one iteration. Default size is used when
+            the argument is given as None. For an integer batch size k (k <= X.shape[0]),
+            there will be ceil(X.shape[0] / k) iterations in single epoch. The smallest
+            allowed batch size is one.
 
         use_validation : bool
             Default value True means that a separate validation data is created
@@ -728,8 +721,6 @@ class ANN:
         no_upgrade_counter = 0
         start_timestamp = time.perf_counter()
 
-        logger.info(f"Begin training, do {self._iters} iterations for every {self._epochs} epochs")
-
         for epoch in range(1, self._epochs + 1):
             epoch_rows = self._rng.choice(x_indices, size=len(x_indices), replace=False)
             X, y_inv = X[epoch_rows], y_inv[epoch_rows]
@@ -763,7 +754,7 @@ class ANN:
                     no_upgrade_counter = 0
                 else:
                     no_upgrade_counter += 1
-                    if no_upgrade_counter >= self._early_stop_thres:
+                    if no_upgrade_counter >= self._early_stop_thres and self._verbose_level:
                         logger.info(
                             f"Early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
                         )
@@ -776,13 +767,13 @@ class ANN:
                     no_upgrade_counter = 0
                 else:
                     no_upgrade_counter += 1
-                    if no_upgrade_counter >= self._early_stop_thres:
+                    if no_upgrade_counter >= self._early_stop_thres and self._verbose_level:
                         logger.info(
                             f"Early stop threshold {self._early_stop_thres} reached, stop training at epoch {epoch}"
                         )
                         break
 
-        if self._weights_save_epoch and self._weights_save_epoch > 0:
+        if self._weights_save_epoch and self._weights_save_epoch > 0 and self._verbose_level:
             logger.info(f"Weights last saved at epoch {self._weights_save_epoch}")
 
         self._stopping_epoch = epoch

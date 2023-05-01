@@ -80,10 +80,10 @@ def eval_cost(y_true: np.ndarray, y_pred: np.ndarray, method: str) -> float:
 
         # don't allow zero or small negative return values
         # e.g. if `matches` array contains only ones, the return value would be slightly negative
-        return max(-np.mean(log_y), 1e-20)
+        return max(-np.mean(log_y), 1e-12)
 
     if method not in ("reg", "regression"):
         raise ValueError(f"Cannot evaluate cost for learning type `{method}`")
 
     square_of_err = (y_true - y_pred) ** 2
-    return max(np.mean(square_of_err), 1e-20)
+    return max(np.mean(square_of_err), 1e-12)

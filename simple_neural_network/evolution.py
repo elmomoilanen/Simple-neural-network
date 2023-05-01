@@ -94,14 +94,16 @@ class Evolution:
         self._lowest_col, self._highest_col, self._median_col = range(3)
 
         default_neurons = (
-            list(range(5, 50, 5)) + list(range(50, 225, 25)) + list(range(250, 1250, 250))
+            list(range(5, 50, 5)) + list(range(50, 225, 25)) + list(range(250, 2000, 250))
         )
 
         self._activations = ANN.allowed_hidden_activations
         self._optimizers = ANN.allowed_optimizers
         self._neurons = tuple(kwargs.get("neurons", default_neurons))
-        self._learning_rates = tuple(kwargs.get("learning_rates", (1e-3, 1e-2, 0.1, 0.5, 1.0)))
-        self._lambdas = tuple(kwargs.get("lambdas", (0.0, 5.0, 25.0, 50.0)))
+        self._learning_rates = tuple(
+            kwargs.get("learning_rates", (1e-3, 1e-2, 0.1, 0.5, 1.0, 5.0, 10.0, 25.0))
+        )
+        self._lambdas = tuple(kwargs.get("lambdas", (0.0, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0, 100.0)))
 
         self._param_set = {
             "hidden_nodes": self._neurons,
@@ -225,7 +227,6 @@ class Evolution:
     @staticmethod
     def _remove_weights_file(file_path):
         if not os.path.isfile(file_path):
-            logger.warning(f"Not a file or cannot find `{file_path}`")
             return
 
         os.unlink(file_path)
@@ -268,6 +269,7 @@ class Evolution:
         method_type: str,
         early_stop_threshold: int = 25,
         epochs: int = 50,
+        batch_size: int = 32,
         use_validation: bool = True,
     ) -> List[Dict]:
         """Run evolution based hyperparameter optimization.
@@ -296,6 +298,10 @@ class Evolution:
             Count of total feedforward/backpropagation passes through the network.
             Default value is 50.
 
+        batch_size : int
+            Count of training data in one iteration. Default is 32 which would mean
+            ceil(X.shape[0] / 32) iterations for every epoch.
+
         use_validation : bool
             Whether to use separate validation data in neural network fitting.
             True as default.
@@ -319,6 +325,7 @@ class Evolution:
 
         early_stop_thres = int(early_stop_threshold)
         epochs = int(epochs)
+        batch_size = int(batch_size)
         use_validation = bool(use_validation)
 
         weights_save_path = os.path.join(os.path.split(__file__)[0], "_evo_weights.h5")
@@ -335,7 +342,6 @@ class Evolution:
             logger.info(f"Evolution generation: {gener}/{self.generations}")
 
             for iter, param_set in enumerate(population):
-                logger.info(f"Hyperparameter set {iter+1}/{len(population)}")
                 # ANN cannot handle argument "fitness"
                 param_set.pop("fitness", None)
 
@@ -343,34 +349,41 @@ class Evolution:
                     **param_set,
                     method=method_type,
                     early_stop_threshold=early_stop_thres,
-                    verbose_level="mid",
+                    verbose_level=None,
                 )
                 ann.fit(
                     x_train,
                     y_train,
                     epochs=epochs,
-                    batch_size=32,
+                    batch_size=batch_size,
                     weights_save_path=weights_save_path,
                     use_validation=use_validation,
                 )
+                time.sleep(0.5)
+
                 try:
                     y_pred = ann.predict(x_test, weights_path=weights_save_path)
-                except FileNotFoundError as err:
-                    logger.warning(err)
-                    # assuming cost is used as fitness, +inf is the worst then
+                except FileNotFoundError:
+                    # assuming cost is used as a fitness score, then +inf is the worst result
                     param_set["fitness"] = np.inf
-                    continue
+                else:
+                    param_set["fitness"] = eval_cost(
+                        y_test.reshape(-1), y_pred.reshape(-1), method=method_type
+                    )
 
-                param_set["fitness"] = eval_cost(
-                    y_test.reshape(-1), y_pred.reshape(-1), method=method_type
+                logger.info(
+                    f"Hyperset {iter+1}/{len(population)}: Fitness value (cost) for test data: {param_set['fitness']:.2f}"
                 )
-                logger.info(f"Fitness value (cost) for test data: {param_set['fitness']:.2f}")
 
             self._remove_weights_file(weights_save_path)
             self._save_generation_fitness_score(gener - 1, population)
 
             if gener == self.generations:
                 return sorted(population, key=lambda x: x["fitness"])
+
+            logger.info(
+                f"Best hyperset so far: {sorted(population, key=lambda x: x['fitness'])[0]}"
+            )
 
             new_population = self._select_by_fitness(population)
             self._mutate(new_population)
