@@ -266,8 +266,9 @@ class ANN:
         y_ohe = np.zeros((uniq_vals.shape[0], y.shape[0]), dtype=x_type)
         y_ohe[y_inv, np.arange(y_ohe.shape[1])] = 1
 
-        # e.g. y has K classes and observations, then y_ohe dim is K x N
-        # e.g. y_inv[i]: for column `i` in y_ohe, its y_inv[i] row equals 1, rest rows are zero
+        # if y has K classes and N observations, then y_ohe dim is K x N
+        # for K classes, y_inv values range from 0 to K-1
+        # ohe: for observation i, y_ohe[y_inv[i], i] == 1, values in other rows are zero
 
         return y_ohe, y_inv
 
@@ -322,6 +323,8 @@ class ANN:
     def _cross_entropy(y_inv, y_pred):
         labels = y_inv.shape[0]
         y_pred = np.clip(y_pred, 1e-12, 1.0 - 1e-12)
+
+        # y_pred dim is K x N, K classes and N observations (batch size)
 
         log_likelihood = -np.log(y_pred[y_inv, range(labels)])
         return np.sum(log_likelihood) / labels
@@ -469,13 +472,14 @@ class ANN:
             self._b["b3"] = self._b["b3"] - eps * b3_grad
 
         else:  # adam
+            # biased first moment estimates
             self._mom_w["w3"] = (
                 self._mom_w["w3"] * self._mom_beta1 + (1.0 - self._mom_beta1) * w3_grad
             )
             self._mom_b["b3"] = (
                 self._mom_b["b3"] * self._mom_beta1 + (1.0 - self._mom_beta1) * b3_grad
             )
-
+            # biased second moment estimates
             self._s_w["w3"] = (
                 self._s_w["w3"] * self._mom_beta2 + (1.0 - self._mom_beta2) * w3_grad * w3_grad
             )
@@ -485,9 +489,9 @@ class ANN:
 
             exp = max(epoch, 1)
 
+            # bias-corrected 1st and 2nd moment estimates
             mom_w3_new = self._mom_w["w3"] / (1.0 - self._mom_beta1**exp)
             mom_b3_new = self._mom_b["b3"] / (1.0 - self._mom_beta1**exp)
-
             s_w3_new = self._s_w["w3"] / (1.0 - self._mom_beta2**exp)
             s_b3_new = self._s_b["b3"] / (1.0 - self._mom_beta2**exp)
 
