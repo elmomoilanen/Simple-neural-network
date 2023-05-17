@@ -96,7 +96,7 @@ where result of the *fit* method call will be a list of 20 parameter combination
 Render the documentation as HTML with the following command
 
 ```bash
-sphinx-build -b html docs/source/ docs/build/html
+poetry run sphinx-build -b html docs/source/ docs/build/html
 ```
 
 and open the starting page docs/build/html/index.html in a browser.
