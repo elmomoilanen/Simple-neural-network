@@ -2,18 +2,23 @@ name: main
 
 on:
   push:
+    paths-ignore: [ "docs/**" ]
     branches: [ main ]
   pull_request:
+    paths-ignore: [ "docs/**" ]
     branches: [ main ]
 
 jobs:
-  build:
+  tests:
     name: ${{ matrix.os }} / ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.10"]
+    defaults:
+      run:
+        shell: bash
 
     steps:
     - uses: actions/checkout@v3
@@ -25,19 +30,15 @@ jobs:
         
     - name: Get Python version
       id: python-version
-      shell: bash
       run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
       
-    - name: Bootstrap Poetry
-      shell: bash
+    - name: Install Poetry
       run: curl -sSL https://install.python-poetry.org | python3 - -y
       
     - name: Update PATH
-      shell: bash
       run: echo "$HOME/.local/bin" >> $GITHUB_PATH
         
     - name: Install dependencies
-      shell: bash
       run: poetry install --with dev
 
     - name: Check formatting
