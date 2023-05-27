@@ -58,11 +58,14 @@ class Evolution:
     (with population size three) that each have 10 epochs.
 
     >>> import numpy as np
+    >>> import warnings
     >>> rg = np.random.default_rng()
     >>> X = rg.normal(size=(500, 2))
     >>> y = 0.7 * np.sin(X[:, 0]) + 0.3 * np.cos(X[:, 1])
     >>> from simple_neural_network.evolution import Evolution
     >>> evo = Evolution(generations=2, population_size=3)
+    >>> # Filter out possible overflow runtime warnings
+    >>> warnings.filterwarnings("ignore", category=RuntimeWarning)
     >>> results = evo.fit(X, y.reshape(-1, 1), "regression", epochs=10)
     >>> len(results)
     3
