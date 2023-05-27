@@ -20,6 +20,7 @@ optional = true
 black = "^23.3"
 pytest = "^7.1"
 flake8 = "^6.0"
+coverage = "^7.2"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^6.1"

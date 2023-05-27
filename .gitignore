@@ -15,3 +15,4 @@ examples/*
 !examples/classification.ipynb
 
 build
+.coverage
