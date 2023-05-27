@@ -2,7 +2,7 @@
 
 [![main](https://github.com/elmomoilanen/Simple-neural-network/actions/workflows/main.yml/badge.svg)](https://github.com/elmomoilanen/Simple-neural-network/actions/workflows/main.yml)
 
-Library that implements a simple two hidden layer artificial neural network with NumPy. Purpose of this library is to provide an easy learning and testing environment for the essentials of supervised learning and neural network models in particular.
+This library implements a simple two hidden layer artificial neural network with NumPy. Its purpose is to provide an easy learning and testing environment for the essentials of supervised learning and neural network models in particular.
 
 ## Install ## 
 
@@ -46,7 +46,7 @@ ann = ANN(
     early_stop_threshold=50,
 )
 
-# By default, validation data will be 20 % of the passed data
+# By default, validation data constitutes 20% of the provided dataset
 # Batch size b means ceil(X_train.shape[0]/b) iterations per epoch
 ann.fit(X, y.reshape(-1, 1), epochs=500, batch_size=50)
 
@@ -105,7 +105,7 @@ and open the starting page docs/build/html/index.html in a browser.
 
 Folder *examples* contain a classification task example for the MNIST data (task is to classify handwritten digits). In order to be able run the code in the notebook, the data must be downloaded separately and the jupyter package must be installed and included in the current virtual environment.
 
-Following command does the Jupyter package installation (examples is now the required dependency group in pyproject.toml)
+Following command does the Jupyter package installation (`examples` is now the required dependency group in pyproject.toml)
 
 ```bash
 poetry install --with examples
