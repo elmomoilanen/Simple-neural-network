@@ -32,9 +32,9 @@ class Evolution:
     """Algorithm to search optimal set of hyperparameters.
 
     From the hyperparameters, optimizer and activation functions are restricted
-    by the `ANN` class and thus cannot be passed here from the user. On the contrary,
+    by the `ANN` class and thus cannot be given from the user. On the contrary,
     neurons, learning_rates and lambdas (L2 regularization) can be passed by
-    giving them via kwargs. They must be given as tuples.
+    giving them via kwargs.
 
     Parameters
     ----------
@@ -106,7 +106,9 @@ class Evolution:
         self._learning_rates = tuple(
             kwargs.get("learning_rates", (1e-3, 1e-2, 0.1, 0.5, 1.0, 5.0, 10.0, 25.0))
         )
-        self._lambdas = tuple(kwargs.get("lambdas", (0.0, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0, 100.0)))
+        self._lambdas = tuple(
+            kwargs.get("lambdas", (0.0, 1e-3, 1e-2, 0.1, 1.0, 5.0, 10.0, 50.0, 100.0))
+        )
 
         self._param_set = {
             "hidden_nodes": self._neurons,
@@ -185,6 +187,11 @@ class Evolution:
         fittest_members = members_sorted[: self._top_popu]
         poor_members = random.choices(members_sorted[self._top_popu :], k=self._poor_popu)
 
+        for member in poor_members:
+            # force mutation for the poorest members of the population
+            # assuming that method _mutate gets called next
+            member["mutate"] = True
+
         new_population = fittest_members + poor_members
         random.shuffle(new_population)
 
@@ -194,8 +201,9 @@ class Evolution:
         param_keys = self._param_set.keys()
 
         for member in population:
-            if random.random() > self.mutate_threshold:
-                # some of the params for this member are mutated
+            forced_mutation = member.get("mutate", False)
+
+            if forced_mutation or random.random() > self.mutate_threshold:
                 mutate_keys = tuple(key for key in param_keys if random.random() > 0.5)
 
                 for key in mutate_keys:
@@ -207,6 +215,8 @@ class Evolution:
                         )
                     else:
                         member[key] = self._get_random_param(key)[0]
+
+            member.pop("mutate", None)
 
     def _reproduce(self, population):
         offsprings = []
@@ -341,7 +351,7 @@ class Evolution:
         start_timestamp = time.perf_counter()
 
         for gener in range(1, self.generations + 1):
-            logger.info("####################")
+            logger.info("##########################")
             logger.info(f"Evolution generation: {gener}/{self.generations}")
 
             for iter, param_set in enumerate(population):

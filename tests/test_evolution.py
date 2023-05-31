@@ -89,7 +89,7 @@ def test_select_by_fitness():
 def test_mutation():
     evo = Evolution(generations=2, population_size=3)
 
-    population = [{key: 1 for key in params} for j in range(evo.pop_size)]
+    population = [{key: 1 for key in params} for _ in range(evo.pop_size)]
 
     evo._mutate(population)
 
@@ -112,7 +112,7 @@ def test_reproducing():
 
     correct_new_size = init_pop_size + offspring_size
 
-    population = [{key: 1 for key in params} for j in range(evo.pop_size)]
+    population = [{key: 1 for key in params} for _ in range(evo.pop_size)]
     assert len(population) == init_pop_size
 
     evo._reproduce(population)
