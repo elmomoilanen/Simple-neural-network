@@ -9,8 +9,8 @@ keywords = ["statistics", "neural network", "supervised learning", "evolutionary
 
 [tool.poetry.dependencies]
 python = "^3.10"
-numpy = "^1.23"
-matplotlib = "^3.6"
+numpy = "^1.25"
+matplotlib = "^3.7"
 h5py = "^3.6"
 
 [tool.poetry.group.dev]
@@ -18,7 +18,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3"
-pytest = "^7.1"
+pytest = "^7.4"
 flake8 = "^6.0"
 coverage = "^7.2"
 
