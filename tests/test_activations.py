@@ -52,8 +52,8 @@ def test_softmax():
     arr = np.array([[-1.0, 5.0], [0.0, 2.0], [1.0, -1.0]])
 
     soft = softmax(arr)
-    assert np.alltrue((soft >= 0.0) & (soft <= 1.0))
-    assert np.alltrue(soft.argmax(axis=0) == np.array([2, 0]))
+    assert np.all((soft >= 0.0) & (soft <= 1.0))
+    assert np.all(soft.argmax(axis=0) == np.array([2, 0]))
 
     # columns must sum up to ones (column represent a prob dist)
     soft_sum = soft.sum(axis=0)
@@ -63,11 +63,11 @@ def test_softmax():
 
     dsoft = dsoftmax(arr)
     assert dsoft.shape == arr.shape
-    assert np.alltrue((dsoft >= 0.0) & (dsoft <= 1.0))
+    assert np.all((dsoft >= 0.0) & (dsoft <= 1.0))
 
 
 def test_identity():
     arr = np.arange(-3, 3)
 
-    assert np.alltrue(identity(arr) == arr)
-    assert np.alltrue(didentity(arr) == np.ones(arr.shape, dtype=arr.dtype))
+    assert np.all(identity(arr) == arr)
+    assert np.all(didentity(arr) == np.ones(arr.shape, dtype=arr.dtype))

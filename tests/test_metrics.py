@@ -16,7 +16,7 @@ def test_confusion_matrix_binary():
     cmatrix = confusion_matrix(y_true, y_pred)
 
     assert cmatrix.shape == (2, 2)
-    assert np.alltrue(corr_cmatrix == cmatrix)
+    assert np.all(corr_cmatrix == cmatrix)
 
 
 def test_confusion_matrix_multi_category():
@@ -29,7 +29,7 @@ def test_confusion_matrix_multi_category():
     cmatrix = confusion_matrix(y_true, y_pred)
 
     assert cmatrix.shape == (3, 3)
-    assert np.alltrue(corr_cmatrix == cmatrix)
+    assert np.all(corr_cmatrix == cmatrix)
 
 
 def test_confusion_matrix_multi_category_other():
@@ -44,7 +44,7 @@ def test_confusion_matrix_multi_category_other():
     cmatrix = confusion_matrix(y_true, y_pred)
 
     assert cmatrix.shape == (5, 5)
-    assert np.alltrue(corr_cmatrix == cmatrix)
+    assert np.all(corr_cmatrix == cmatrix)
 
 
 def test_confusion_matrix_invalid_arguments():

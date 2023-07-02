@@ -244,8 +244,8 @@ def test_cross_entropy_consistency():
     # y_pred_other has largest probability for all y_inv values (it's giving correct prediction)
     y_pred_other = np.array([[0.6, 0.3, 0.15], [0.2, 0.3, 0.7], [0.2, 0.4, 0.15]])
 
-    assert np.alltrue(y_pred.sum(axis=0) == 1)
-    assert np.alltrue(y_pred_other.sum(axis=0) == 1)
+    assert np.all(y_pred.sum(axis=0) == 1)
+    assert np.all(y_pred_other.sum(axis=0) == 1)
 
     cost1 = ANN._cross_entropy(y_inv, y_pred)
     cost2 = ANN._cross_entropy(y_inv, y_pred_other)
@@ -292,7 +292,7 @@ def test_cross_entropy_derivative():
     dcross_entr = ANN._dcross_entropy(y_inv, y_pred)
     assert dcross_entr.shape == y_pred.shape
 
-    assert np.alltrue(
+    assert np.all(
         np.isclose(
             dcross_entr,
             np.array(
@@ -321,7 +321,7 @@ def test_mse_derivative():
     dmse = ANN._dmse(y, y_pred)
     assert dmse.shape == y.shape
 
-    assert np.alltrue(np.isclose(dmse, np.array([-0.5, 0.5, 0.0, -0.5]), atol=0.001))
+    assert np.all(np.isclose(dmse, np.array([-0.5, 0.5, 0.0, -0.5]), atol=0.001))
 
 
 def test_eval_cost_with_regularization():
@@ -490,7 +490,7 @@ def test_predict_class():
     # must have x.shape[0] predictions
     assert y_pred.shape[0] == x.shape[0]
     # prediction is in inverse format
-    assert np.alltrue((y_pred >= 0) & (y_pred < y_categories))
+    assert np.all((y_pred >= 0) & (y_pred < y_categories))
 
 
 def test_predict_file_not_found():
