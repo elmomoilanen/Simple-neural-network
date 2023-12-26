@@ -14,13 +14,13 @@ After cloning and navigating to the target folder, running the following command
 poetry install
 ```
 
-In-project virtual environment setup is controlled by *poetry.toml*. Default dependencies are not enough to run the unit tests as the pytest library is required for that and it is only included in the optional `dev` dependency group which can be installed by adding `--with dev` to the above installation command.
+The setup for the in-project virtual environment is controlled by *poetry.toml*. Default dependencies are not enough to run the unit tests as the pytest library is required for that and it is only included in the optional `dev` dependency group which can be installed by adding `--with dev` to the above installation command.
 
 For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
 ## Use ##
 
-Module *neural_network* contains a class *ANN* which implements the two hidden layer neural network model. Its primary public methods are *fit* and *predict*, other two methods *get_fit_results* and *plot_fit_results* can be used to inspect results of the fitting step after it has been run. Selecting appropriate hyperparameters is an important part of the neural network design and for this respect module *evolution* contains a class *Evolution* with a public method *fit* implementing an evolution based algorithm to search an optimal hyperparameter combination.
+Module *neural_network* contains a class *ANN* which implements the two hidden layer neural network model. Its primary public methods are *fit* and *predict*, the other two methods *get_fit_results* and *plot_fit_results* can be used to inspect results of the fitting step after it has been run. Selecting appropriate hyperparameters is an important part of the neural network design. To assist with this, the *evolution* module contains a class *Evolution*. This class has a public method *fit* that implements an evolution-based algorithm to search for an optimal hyperparameter combination.
 
 The following example illustrates the usage of this library. To see the API docs, you can render the [documentation as HTML](#docs) or read the docstrings directly.
 
@@ -32,9 +32,9 @@ MPLBACKEND= poetry run python
 
 with a proper backend (e.g. macosx or qt5agg) after the equal sign. If the backend has been set correctly earlier, just drop this setting.
 
-Consider now a typical supervised learning task where the goal is to learn a function **f** between provided example input-output (X-y) pairs such that the learned function would also generalize well for unseen data. Assume that X is a numerical data matrix of shape n x p (n observations, p attributes) and y is an array of labels of size n. As the dependent variable y contains labels, the function **f** classifies each x_i from the input space to the output space. Notice that this example and the synthetic data generation (skipped here) are also presented in the ANN's docstring.
+Consider now a typical supervised learning task where the goal is to learn a function between provided example input-output (X-y) pairs such that the learned function would also generalize well for unseen data. Assume that X is a numerical data matrix of shape n x p (n observations, p attributes) and y is an array of labels of size n. As the dependent variable y contains labels, the function classifies each x_i from the input space to the output space. Notice that this example and the synthetic data generation (skipped here) are also presented in the ANN's docstring.
 
-Following code imports the ANN class from the *simple_neural_network* package and fits a model (i.e., learns a function **f**) for the example X-y pairs. We notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step but more on this latter option later. For the complete set of hyperparameter options, please check the ANN's docstring as there are a myriad of choices.
+Following code imports the ANN class from the *simple_neural_network* package and fits a model (i.e., learns a function) for the example X-y pairs.
 
 ```python
 from simple_neural_network import ANN
@@ -56,6 +56,8 @@ ann.get_fit_results()
 # Plot cost and accuracy
 ann.plot_fit_results()
 ```
+
+Notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step but more on this latter option later. For the complete set of hyperparameter options, please check the ANN's docstring as there are a myriad of choices.
 
 Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). To make this work during the learning process, the optimal model weights are saved to a file, by default to current working directory with the name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes up to the end.
 
