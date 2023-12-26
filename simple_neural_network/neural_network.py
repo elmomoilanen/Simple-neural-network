@@ -23,6 +23,8 @@ from .activations import (
     dsoftmax,
     identity,
     didentity,
+    swish,
+    dswish,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,16 +39,16 @@ class ANN:
         Node counts in the 1st and 2nd hidden layers. Default counts are 50.
 
     method : str
-        Type of learning, either `class` for classification (is the default)
+        Type of learning, either `class` for classification (default)
         or `reg` for regression.
 
     optimizer : str
-        Optimization algorithm for learning, either the default `sgd` or `adam`.
+        Optimization algorithm for learning, either `sgd` (default) or `adam`.
 
     decay_rate : float non-negative
         Defaults to 0.0. Adaptive learning rate can be used during learning and
-        it's determined by a formula exp(-decay_rate * epoch). However, the default
-        decay rate 0 indicates that the previous formula equals one and in that case
+        it's determined by formula exp(-decay_rate * epoch). However, the default
+        decay rate 0 indicates that this formula equals one and in that case
         the learning rate will be completely determined by the attribute `learning_rate`.
 
     learning_rate : float non-negative
@@ -64,21 +66,23 @@ class ANN:
         Restrict the number of total training passes (epochs) through the network
         by setting this number. Given stop threshold T, if the value of the cost
         function doesn't decrease in T contiguous total passes, training is stopped.
-        By default, this threshold is not applied (if an explicit value not given).
-        Almost always, give this as whole number e.g. 50.
+        By default, this threshold is not applied (if an explicit value is not given).
+        Almost always, give this as a whole number, e.g. 50.
 
     activation1 : str
         Name of the activation function between inputs and first hidden layer.
-        Options are limited to `tanh`, `relu` (default), `leaky_relu` or `elu`.
+        Options are limited to `tanh`, `relu` (default), `leaky_relu`, `elu` and `swish`.
         `tanh` is a sigmoidal function that outputs values between -1 and 1, while
         `relu` is a rectified linear unit function that outputs values between 0
         and infinity. `leaky_relu` is a variant of `relu` that allows a small positive
         gradient even the unit is not active. `elu` is an exponential linear unit
-        function that is a smoother version of the other LU versions.
+        function that is a smoother version of the other LU versions. `swish` is a
+        modification of classical sigmoid activation that doesn't suffer from vanishing
+        gradient problem.
 
     activation2 : str
         Name of the activation function between first and second hidden layers.
-        Options are limited to `tanh`, `relu` (default), `leaky_relu` or `elu`.
+        Options are limited to `tanh`, `relu` (default), `leaky_relu`, `elu` and `swish`.
 
     validation_size : float
         Defines the proportion of data to use for validation. Default is 0.2, which
@@ -114,7 +118,7 @@ class ANN:
 
     allowed_methods = ("class", "reg")
     allowed_optimizers = ("sgd", "adam")
-    allowed_hidden_activations = ("tanh", "relu", "leaky_relu", "elu")
+    allowed_hidden_activations = ("tanh", "relu", "leaky_relu", "elu", "swish")
 
     def __init__(
         self,
@@ -243,6 +247,7 @@ class ANN:
             "relu": (relu, drelu),
             "leaky_relu": (leaky_relu, dleaky_relu),
             "elu": (elu, delu),
+            "swish": (swish, dswish),
             "softmax": (softmax, dsoftmax),
             "identity": (identity, didentity),
         }
@@ -424,18 +429,16 @@ class ANN:
 
         h_L = afunc_L(matmul(weights_L, h_(L-1)) + bias_L)
 
-        where the h_0 term must be X', where ' denotes the tranpose
-        operation.
+        where the h_0 term must be X', ' denoting the tranpose operation.
 
-        For every layer L (hidden and output layers), compute
-        the error (or delta) at that level and then the gradient
-        of the weights recursively, starting from the output level,
-        as follows
+        For every layer L (hidden and output layers), compute error (delta)
+        at that level and then gradient of the weights recursively, starting
+        from the output level, as follows
 
         error_L = Dafunc_L * matmul(weights_(L+1)', error_(L+1))
         ∇ weights_L = matmul(error_L, h_(L-1)')
 
-        where Dafunc_L is the derivative of the layer L activation function and
+        where Dafunc_L is derivative of the layer L activation function and
         * is the Hadamard product. Note that the output level error is given as
 
         error = Dafunc * ∇ costfunc
@@ -667,7 +670,7 @@ class ANN:
         use_validation : bool
             Default value True means that a separate validation data is created
             from X and y. In this case the attribute `validation_size` determines
-            the size of validation which is 20% by default.
+            the size of validation which is 20 % by default.
 
         Other parameters
         ----------------

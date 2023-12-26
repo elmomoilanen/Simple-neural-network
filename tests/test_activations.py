@@ -1,19 +1,6 @@
 import numpy as np
 
-from simple_neural_network.activations import (
-    tanh,
-    dtanh,
-    relu,
-    drelu,
-    leaky_relu,
-    dleaky_relu,
-    elu,
-    delu,
-    softmax,
-    dsoftmax,
-    identity,
-    didentity,
-)
+from simple_neural_network.activations import *
 
 MAX_ATOL = 1e-3
 
@@ -46,6 +33,20 @@ def test_elu():
 
     assert np.allclose(elu(arr), np.array([-0.632, 1.0, 0.0]), atol=MAX_ATOL)
     assert np.allclose(delu(arr), np.array([0.367, 1.0, 1.0]), atol=MAX_ATOL)
+
+
+def test_sigmoid():
+    arr = np.array([-1.0, -0.5, 0.0, 0.5, 1.0])
+
+    assert np.allclose(sigmoid(arr), np.array([0.268, 0.377, 0.5, 0.622, 0.731]), atol=MAX_ATOL)
+    assert np.allclose(dsigmoid(arr), np.array([0.196, 0.235, 0.25, 0.235, 0.196]), atol=MAX_ATOL)
+
+
+def test_swish():
+    arr = np.array([-1.0, -0.5, 0.0, 0.5, 1.0])
+
+    assert np.allclose(swish(arr), np.array([-0.268, -0.188, 0.0, 0.311, 0.731]), atol=MAX_ATOL)
+    assert np.allclose(dswish(arr), np.array([0.072, 0.260, 0.5, 0.739, 0.927]), atol=MAX_ATOL)
 
 
 def test_softmax():
