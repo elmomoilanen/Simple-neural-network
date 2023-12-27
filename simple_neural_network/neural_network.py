@@ -36,7 +36,7 @@ class ANN:
     Parameters
     ----------
     hidden_nodes : Tuple[int, int]
-        Node counts in the 1st and 2nd hidden layers. Default counts are 50.
+        Node counts in the 1st and 2nd hidden layers. Defaults are 50.
 
     method : str
         Type of learning, either `class` for classification (default)
@@ -46,51 +46,48 @@ class ANN:
         Optimization algorithm for learning, either `sgd` (default) or `adam`.
 
     decay_rate : float non-negative
-        Defaults to 0.0. Adaptive learning rate can be used during learning and
-        it's determined by formula exp(-decay_rate * epoch). However, the default
-        decay rate 0 indicates that this formula equals one and in that case
-        the learning rate will be completely determined by the attribute `learning_rate`.
+        Defaults to 0.0. Positive value affects the speed of learning and makes
+        it adaptive. In this case, the learning rate is determined by the formula
+        exp(-decay_rate * epoch). Default value 0.0 indicates that the learning
+        rate is constant and determined by the attribute `learning_rate`.
 
     learning_rate : float non-negative
-        Defaults to 0.1. If attribute `decay_rate` equals zero this constant
+        Defaults to 0.1. If the attribute `decay_rate` equals zero this constant
         rate will be used. Otherwise, when positive decay rate is in use,
         this rate will not have any significance.
 
     lambda_ : float non-negative
-        Strength of L2 regularization, controls the squared l2-norm that
-        is added to the cost function. By default 0.0 and in this case the
-        regularization is not applied. Complete regularization term is
-        lambda / 2n * squared l2-norm of weights, where n is the observation count.
+        Strength of L2 regularization, defaults to 0.0. If positive, the
+        regularization is applied and this value is added to the cost function.
+        The regularization term is lambda / 2n * squared l2-norm of weights,
+        where n is the observation count.
 
     early_stop_threshold : float
-        Restrict the number of total training passes (epochs) through the network
-        by setting this number. Given stop threshold T, if the value of the cost
-        function doesn't decrease in T contiguous total passes, training is stopped.
+        Restricts the number of total training passes (epochs) through the network.
         By default, this threshold is not applied (if an explicit value is not given).
-        Almost always, give this as a whole number, e.g. 50.
+        Given positive stop threshold T, if value of the cost function doesn't decrease
+        in T contiguous total training passes, training will be stopped.
 
     activation1 : str
-        Name of the activation function between inputs and first hidden layer.
+        Name of the activation function between inputs and the first hidden layer.
         Options are limited to `tanh`, `relu` (default), `leaky_relu`, `elu` and `swish`.
-        `tanh` is a sigmoidal function that outputs values between -1 and 1, while
-        `relu` is a rectified linear unit function that outputs values between 0
-        and infinity. `leaky_relu` is a variant of `relu` that allows a small positive
-        gradient even the unit is not active. `elu` is an exponential linear unit
-        function that is a smoother version of the other LU versions. `swish` is a
-        modification of classical sigmoid activation that doesn't suffer from vanishing
-        gradient problem.
+        `tanh` is a sigmoidal function that outputs values between -1 and 1. `relu` is a
+        rectified linear unit function that outputs values between 0 and infinity.
+        `leaky_relu` is a variant of `relu` that allows a small positive gradient even
+        when a unit is not active. `elu` is an exponential linear unit function that is
+        a smoother version of the other LU versions. `swish` is a modification of
+        classical sigmoid activation that doesn't suffer from vanishing gradient problem.
 
     activation2 : str
         Name of the activation function between first and second hidden layers.
         Options are limited to `tanh`, `relu` (default), `leaky_relu`, `elu` and `swish`.
 
     validation_size : float
-        Defines the proportion of data to use for validation. Default is 0.2, which
-        means that 20% of the input data will be used for validation. During training
-        the cost function will be evaluated with validation data if this attribute
-        value is larger than zero. `fit` method has a parameter `use_validation` that
-        determines whether validation is used at all. Thus, setting it to False overrides
-        this validation size (becomes effectively zero).
+        Defines the proportion of data to be used for validation. Defaults to 0.2
+        (20 % of the input data). During training the cost function will be evaluated
+        with validation data if this attribute value is larger than zero. `fit` method
+        has a parameter `use_validation` that determines whether validation is used at all.
+        Thus, setting it to False overrides this validation size (becomes effectively zero).
 
     verbose_level : Optional[str]
         Controls the amount of logging entries. Accepted level names are "high",

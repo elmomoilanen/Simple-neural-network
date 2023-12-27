@@ -2,7 +2,7 @@
 
 [![main](https://github.com/elmomoilanen/Simple-neural-network/actions/workflows/main.yml/badge.svg)](https://github.com/elmomoilanen/Simple-neural-network/actions/workflows/main.yml)
 
-This library implements a simple two hidden layer artificial neural network with NumPy. Its purpose is to provide an easy learning and testing environment for the essentials of supervised learning and neural network models in particular.
+This library implements a simple two hidden layer artificial neural network with NumPy.
 
 ## Install ## 
 
@@ -101,11 +101,11 @@ Render the documentation as HTML with the following command
 poetry run sphinx-build -b html docs/source/ docs/build/html
 ```
 
-and open the starting page `docs/build/html/index.html` in a browser.
+and open the starting page `docs/build/html/index.html` in browser.
 
 ## Examples ##
 
-Folder *examples* contain a classification task example for the MNIST data (task is to classify handwritten digits). In order to be able run the code in the notebook, the data must be downloaded separately and the jupyter package must be installed and included in the current virtual environment.
+Folder *examples* contain a classification task example for the MNIST data (task is to classify handwritten digits). In order to run the code in a notebook, the data must be downloaded separately and the jupyter package must be installed and included in the current virtual environment.
 
 Following command does the Jupyter package installation (`examples` is now the required dependency group in pyproject.toml)
 
@@ -113,7 +113,7 @@ Following command does the Jupyter package installation (`examples` is now the r
 poetry install --with examples
 ```
 
-and then fire up the notebook by
+and then fire up a notebook by
 
 ```bash
 poetry run jupyter notebook
