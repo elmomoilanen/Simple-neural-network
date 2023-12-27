@@ -8,13 +8,13 @@ This library implements a simple two hidden layer artificial neural network with
 
 Poetry is the recommended tool for installation.
 
-After cloning and navigating to the target folder, running the following command creates a virtual environment within this project directory and installs the default dependencies inside it
+After cloning and navigating to the target folder, running the following command creates a virtual environment within this project directory and installs the default dependencies
 
 ```bash
 poetry install
 ```
 
-The setup for the in-project virtual environment is controlled by *poetry.toml*. Default dependencies are not enough to run the unit tests as the pytest library is required for that and it is only included in the optional `dev` dependency group which can be installed by adding `--with dev` to the above installation command.
+The setup for the in-project virtual environment is controlled by *poetry.toml*. In order to run e.g. unit tests, optional dependency group `dev` must be added to installation by appending `--with dev` to the above install command.
 
 For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
@@ -59,11 +59,11 @@ ann.plot_fit_results()
 
 Notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step but more on this latter option later. For the complete set of hyperparameter options, please check the ANN's docstring as there are a myriad of choices.
 
-Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). To make this work during the learning process, the optimal model weights are saved to a file, by default to current working directory with the name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes up to the end.
+Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). To make this work during the learning process, the optimal model weights are saved to a file, by default to current working directory with name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes up to the end.
 
 After the model has been fitted we might encounter new input data X_new for which we would like to get the predicted labels y_new. This can simply be done by calling the ANN's *predict* method, and either assuming that a previously created and fitted object is still in memory or in other case passing a file path for the pre-trained neural network weights. For now, we continue from the previous code snippet and reuse the best model weights saved in the file *weights.h5*.
 
-If for some reason we got also y_new (true labels for X_new), we can evaluate the performance of the prediction by using the *confusion_matrix* function from the *metrics* module.
+If for some reason we got also y_new (true labels for X_new), we can evaluate performance of the prediction by using *confusion_matrix* function from the *metrics* module.
 
 ```python
 y_new_pred = ann.predict(X_new, "weights.h5")
@@ -74,11 +74,11 @@ from simple_neural_network import confusion_matrix
 conf_matrix = confusion_matrix(y_true=y_new, y_pred=y_new_pred)
 ```
 
-Rows of the confusion matrix represent the true labels with zero-based indexing and columns corresponding predicted labels. For example, in case of binary labels the confusion matrix is of size 2 x 2, and entry (0, 1) would represent the total count of predicted cases where the true label is zero but predicted one. Hence, entry (1, 0) represent total count of cases where the prediction was zero but true label one. Then of course, diagonal entries show the correctly predicted counts.
+Rows of the confusion matrix represent the true labels with zero-based indexing and columns corresponding predicted labels. For example, in case of binary labels the confusion matrix is of size 2 x 2, and entry (0, 1) would represent the total count of cases where the true label is zero but the predicted label one. Similarly, entry (1, 0) represent the total count of cases where the prediction is zero but the true label is one. Then, of course, diagonal entries show the correctly predicted label counts.
 
-Let's now get back to the hyperparameter problem. Finding optimal or even good hyperparameters is a difficult task, one and maybe the most common possibility being just trying different combinations manually. One option is to use an evolutionary algorithm that can be seen as a bit enhanced version of the basic cross-validation approach that would likely take much more time to complete.
+Let's now get back to the hyperparameter problem. Finding optimal or even good hyperparameters is a difficult task. One option is to use an evolutionary algorithm that can be seen as a bit enhanced version of the basic cross-validation approach that would likely take much more time to complete.
 
-The evolution algorithm used here needs for start two parameters N and K that describe the population size (sets of hyperparameters) and number of generations (how long the algorithm will be run). At the start of the first generation, a population of size N is initialized. After that a fitness score (cost) is computed for every member of the population, the members are ordered by the score and top M (< N) and few P (< M) of the worst performers are selected to survive, for random members of the survivors some of their parameters are mutated and finally N-(M+P) new members are reproduced from the survived members making the population size again N. This process, starting from the fitness score computations, is repeated K times.
+The evolution algorithm used here needs for the start two parameters N and K that describe the population size (sets of hyperparameters) and number of generations (how long the algorithm will be run). At the beginning of the first generation, a population of size N is initialized. After that a fitness score (cost) is computed for every member of the population, members are ordered by the score and top M (< N) and few P (< M) of the worst performers are selected to survive, for random members of the survivors some of their parameters are mutated and finally N-(M+P) new members are reproduced from the survived members making the population size again N. This process, starting from the fitness score computations, is repeated K times.
 
 This evolution algorithm can be used as follows
 
@@ -91,7 +91,7 @@ evo = Evolution(generations=10, population_size=20)
 evo.fit(X, y.reshape(-1, 1), "classification")
 ```
 
-where result of the *fit* method call will be a list of 20 parameter combinations where the first combination is the most fittest (has the lowest cost function value). This combination can be passed for a new ANN object or used to further narrow down search region of the hyperparameter space.
+where the *fit* method call returns a list of 20 parameter combinations where the first combination is the most fittest (has the lowest cost function value). This combination can be passed for a new ANN object or used to further narrow down search region of the hyperparameter space.
 
 ## Docs ##
 
