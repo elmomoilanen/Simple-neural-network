@@ -1,4 +1,5 @@
 """Implements the neural network class `ANN`."""
+
 import os
 import math
 import time

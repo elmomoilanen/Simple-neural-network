@@ -10,6 +10,7 @@ Package contains the following modules
 of this package and can be interacted via its primary public interfaces `fit`
 and `predict`.
 """
+
 __version__ = "1.0.0"
 
 import logging.config

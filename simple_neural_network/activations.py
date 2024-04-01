@@ -1,4 +1,5 @@
 """Implements activation functions and their derivatives."""
+
 import numpy as np
 
 

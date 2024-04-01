@@ -13,6 +13,7 @@ Strategy is the follows:
 
 Repeat the process K times from step 2.
 """
+
 import os
 import time
 import random
