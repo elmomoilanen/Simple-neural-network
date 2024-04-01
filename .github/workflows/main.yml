@@ -8,7 +8,7 @@ on:
     paths-ignore: [ "docs/**" ]
     branches: [ main ]
   schedule:
-    - cron: '45 18 3 * *'
+    - cron: '30 19 1 * *'
 
 jobs:
   tests:
@@ -23,7 +23,7 @@ jobs:
         shell: bash
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
