@@ -95,7 +95,7 @@ where the *fit* method call returns a list of 20 parameter combinations where th
 
 ## Docs ##
 
-Render the documentation as HTML with the following command
+Render the documentation as HTML files with the following command
 
 ```bash
 poetry run sphinx-build -b html docs/source/ docs/build/html
