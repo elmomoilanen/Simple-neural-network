@@ -8,13 +8,13 @@ This library implements a simple two hidden layer artificial neural network with
 
 Poetry is the recommended tool for installation.
 
-After cloning and navigating to the target folder, running the following command creates a virtual environment within this project directory and installs the default dependencies
+Run the following command to install default dependencies within an in-project virtual environment
 
 ```bash
 poetry install
 ```
 
-The setup for the in-project virtual environment is controlled by *poetry.toml*. In order to run e.g. unit tests, optional dependency group `dev` must be added to installation by appending `--with dev` to the above install command.
+The setup for the in-project virtual environment is controlled by *poetry.toml*. In order to run e.g. unit tests, optional dependency group `dev` must be added to installation by appending `--with dev` to the command above.
 
 For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
