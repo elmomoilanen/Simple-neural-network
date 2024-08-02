@@ -23,23 +23,23 @@ def remove_file(full_path):
 
 def test_init_obj_not_accepted_hidden_nodes():
     with pytest.raises(TypeError, match=r"`hidden_nodes` must be a tuple of length two"):
-        ann = ANN(hidden_nodes=(15,), method="class")
+        ANN(hidden_nodes=(15,), method="class")
 
     with pytest.raises(ValueError, match=r"Node count cannot be under one"):
-        ann = ANN(hidden_nodes=(10, 0), method="class")
+        ANN(hidden_nodes=(10, 0), method="class")
 
     with pytest.raises(TypeError, match=r"`hidden_nodes` must be a tuple of length two"):
-        ann = ANN(hidden_nodes="10,1", method="class")
+        ANN(hidden_nodes="10,1", method="class")
 
 
 def test_init_obj_not_accepted_method():
     allowed_met = ", ".join(ANN.allowed_methods)
 
     with pytest.raises(ValueError, match=rf"`method` must be one of {allowed_met}"):
-        ann = ANN((5, 7), "")
+        ANN((5, 7), "")
 
     with pytest.raises(TypeError, match=r"Method must be a string"):
-        ann = ANN((3, 2), lambda x: x)
+        ANN((3, 2), lambda x: x)
 
 
 def test_init_obj_hidden_nodes_property():
@@ -236,7 +236,7 @@ def test_momentum_and_adapter_weights():
 
 
 def test_cross_entropy_consistency():
-    ann = ANN((5, 5), "class")
+    ANN((5, 5), "class")
 
     y_inv = np.array([0, 2, 1])
     # y_pred has largest probability for 0 and 1 of y_inv (first and third col)
