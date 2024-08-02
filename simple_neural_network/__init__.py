@@ -22,6 +22,6 @@ from pathlib import Path
 with open(os.path.join(Path(__file__).parent.parent, "logging.json"), "r") as conf_file:
     logging.config.dictConfig(json.load(conf_file))
 
-from simple_neural_network.evolution import Evolution
-from simple_neural_network.metrics import confusion_matrix
-from simple_neural_network.neural_network import ANN
+from simple_neural_network.evolution import Evolution as Evolution
+from simple_neural_network.metrics import confusion_matrix as confusion_matrix
+from simple_neural_network.neural_network import ANN as ANN
