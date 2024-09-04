@@ -16,7 +16,7 @@ poetry install
 
 The setup for the in-project virtual environment is controlled by *poetry.toml*. In order to run e.g. unit tests, optional dependency group `dev` must be added to installation by appending `--with dev` to the command above.
 
-For the plotting to work correctly it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
+For the plotting to work correctly, it might be required to set the backend for Matplotlib. One way to do this is to set the MPLBACKEND environment variable (overrides any matplotlibrc configuration) for the current shell.
 
 ## Use ##
 
@@ -57,9 +57,9 @@ ann.get_fit_results()
 ann.plot_fit_results()
 ```
 
-Notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step but more on this latter option later. For the complete set of hyperparameter options, please check the ANN's docstring as there are a myriad of choices.
+Notice that in order to run the model fitting using the ANN's *fit* method, a certain set of hyperparameters must be defined in advance. This can be done manually or automated by an additional hyperparameter optimization step, but more on this latter option later. For the complete set of hyperparameter options, please check the ANN's docstring as there are a myriad of choices.
 
-Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. Quality or strength of this learning doesn't necessarily increase all along from the beginning to the end and thus it might be a good strategy to halt the fitting process if results don't get better in some T contiguous number of epochs (total passes through the network). To make this work during the learning process, the optimal model weights are saved to a file, by default to current working directory with name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes up to the end.
+Speaking of neural networks in general, learning is said to happen when the weights between neurons adjust during fitting process. The quality or strength of this learning doesn't necessarily increase continuously from the beginning to the end. Thus, it might be a good strategy to halt the fitting process if results don't improve over some T contiguous number of epochs (total passes through the network). To make this work during the learning process, the optimal model weights are saved to a file, by default to current working directory with name *weights.h5*. This way the best model is kept available for later use irrespective of how the fitting process goes up to the end.
 
 After the model has been fitted we might encounter new input data X_new for which we would like to get the predicted labels y_new. This can simply be done by calling the ANN's *predict* method, and either assuming that a previously created and fitted object is still in memory or in other case passing a file path for the pre-trained neural network weights. For now, we continue from the previous code snippet and reuse the best model weights saved in the file *weights.h5*.
 
@@ -105,15 +105,15 @@ and open the starting page `docs/build/html/index.html` in browser.
 
 ## Examples ##
 
-Folder *examples* contain a classification task example for the MNIST data (task is to classify handwritten digits). In order to run the code in a notebook, the data must be downloaded separately and the jupyter package must be installed and included in the current virtual environment.
+Folder *examples* contain a classification task example for the MNIST data (the task is to classify handwritten digits). In order to run the code in a notebook, the data must be downloaded separately, and the Jupyter package must be installed and included in the current virtual environment.
 
-Following command does the Jupyter package installation (`examples` is now the required dependency group in pyproject.toml)
+Following command installs the Jupyter package (`examples` is now the required dependency group in pyproject.toml)
 
 ```bash
 poetry install --with examples
 ```
 
-and then fire up a notebook by
+and then fire up a notebook by running
 
 ```bash
 poetry run jupyter notebook
