@@ -386,7 +386,7 @@ class Evolution:
                     )
 
                 logger.info(
-                    f"Hyperset {iter+1}/{len(population)}: Fitness value (cost) for test data: {param_set['fitness']:.2f}"
+                    f"Hyperset {iter + 1}/{len(population)}: Fitness value (cost) for test data: {param_set['fitness']:.2f}"
                 )
 
             self._remove_weights_file(weights_save_path)
@@ -406,7 +406,7 @@ class Evolution:
             population = new_population
 
             elapsed_time = time.perf_counter() - start_timestamp
-            logger.info(f"Elapsed time: {elapsed_time//60:.0f} m. {elapsed_time%60:.0f} s.")
+            logger.info(f"Elapsed time: {elapsed_time // 60:.0f} m. {elapsed_time % 60:.0f} s.")
 
         # should never land here
         return []

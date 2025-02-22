@@ -8,29 +8,29 @@ readme = "README.md"
 keywords = ["statistics", "neural network", "supervised learning", "evolutionary algorithms"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-numpy = "^1.25"
-matplotlib = "^3.7"
-h5py = "^3.6"
+python = "^3.12"
+numpy = "^2.2"
+matplotlib = "^3.9"
+h5py = "^3.12"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.3"
-pytest = "^8.1"
+black = "^25.1"
+pytest = "^8.3"
 flake8 = "^7.0"
-coverage = "^7.4"
+coverage = "^7.6"
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^7.2"
-sphinx-rtd-theme = "^2.0"
+sphinx = "^8.0"
+sphinx-rtd-theme = "^3.0"
 
 [tool.poetry.group.examples]
 optional = true
 
 [tool.poetry.group.examples.dependencies]
-jupyter = "1.0.0"
+jupyter = "^1.1"
 
 [tool.black]
 line-length = 100
